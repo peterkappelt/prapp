@@ -1,0 +1,63 @@
+import { initializeApp } from "firebase/app";
+import {
+  CollectionReference,
+  addDoc,
+  collection,
+  getDocs,
+  getFirestore,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "firebase/firestore";
+import { TTemplateProcess } from "./types";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBV2QeJYu44suzhebbPCyY6-LjQ3AFQ6EM",
+  authDomain: "prapp-a04b0.firebaseapp.com",
+  projectId: "prapp-a04b0",
+  storageBucket: "prapp-a04b0.appspot.com",
+  messagingSenderId: "997063427666",
+  appId: "1:997063427666:web:908ef1c4c856d9ddbd018b",
+};
+
+const app = initializeApp(firebaseConfig);
+
+// Initialize Cloud Firestore and get a reference to the service
+export const db = getFirestore(app);
+
+export const collections = {
+  /** Schema: TemplateProcesses/<id of the template>/Revisions/<random firebase id> => TTemplateProcess*/
+  templateProcessRevisions: (templateId: string) =>
+    collection(
+      db,
+      "TemplateProcesses",
+      templateId,
+      "Revisions"
+    ) as CollectionReference<TTemplateProcess>,
+};
+
+export const queries = {
+  getLatestTemplateProcessVersion: async (templateId: string) => {
+    const res = await getDocs(
+      query(
+        collections.templateProcessRevisions(templateId),
+        orderBy("createdAt", "desc"),
+        limit(1)
+      )
+    );
+    if (res.empty) return;
+    return res.docs[0].data();
+  },
+};
+
+export const storeProcessRevision = async (
+  templateId: string,
+  process: TTemplateProcess
+) => {
+  const res = await addDoc(collections.templateProcessRevisions(templateId), {
+    ...process,
+    createdAt: serverTimestamp(),
+  });
+  return res;
+};
