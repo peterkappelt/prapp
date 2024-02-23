@@ -1,7 +1,15 @@
 import { TTemplateProcess, TemplateProcess } from "@/types";
 import { ProcessView } from "@components/Process/ProcessView";
-import { Box, Button, LoadingOverlay, Stack, Switch } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Group,
+  LoadingOverlay,
+  Stack,
+  Tooltip,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { IconDeviceFloppy, IconPlayerPlay } from "@tabler/icons-react";
 import { DocumentData, DocumentReference } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useImmer } from "use-immer";
@@ -10,7 +18,6 @@ import { actions, queries } from "./db";
 
 function TemplateProcessEditor({ templateId }: { templateId: string }) {
   const [, setLocation] = useLocation();
-  const [editable, setEditable] = useState(true);
   const [loading, setLoading] = useState(true);
   const [process, setProcess] = useImmer(TemplateProcess.parse({}));
   const [docRef, setDocRef] =
@@ -39,36 +46,52 @@ function TemplateProcessEditor({ templateId }: { templateId: string }) {
     <Box pos="relative">
       <LoadingOverlay visible={loading} />
       <Stack>
-        <Switch
-          checked={editable}
-          onChange={(e) => setEditable(e.currentTarget.checked)}
-          label="Editable"
-        />
-        <Button
-          onClick={() => actions.storeProcessRevision(templateId, process)}
-        >
-          Save
-        </Button>
-        <Button
-          onClick={async () => {
-            if (!docRef) {
-              notifications.show({
-                message: "Process needs to be saved first",
-                color: "red",
-              });
-              return;
+        <Group justify="flex-end">
+          <Tooltip
+            label={
+              docRef
+                ? "Start a tracked execution of this process"
+                : "You must save the process definition before starting an execution"
             }
-            const res = await actions.startProcessExecution(docRef);
-            setLocation(`/execution/${res.id}`);
-          }}
-        >
-          exec
-        </Button>
-        {editable ? (
-          <ProcessView.Editable process={process} mutator={setProcess} />
-        ) : (
-          <ProcessView process={process} />
-        )}
+          >
+            <ActionIcon
+              size="lg"
+              disabled={!docRef}
+              onClick={async () => {
+                if (!docRef) {
+                  notifications.show({
+                    message: "Process needs to be saved first",
+                    color: "red",
+                  });
+                  return;
+                }
+                const res = await actions.startProcessExecution(docRef);
+                setLocation(`/execution/${res.id}`);
+              }}
+            >
+              <IconPlayerPlay
+                style={{ width: "70%", height: "70%" }}
+                stroke={1.5}
+              />
+            </ActionIcon>
+          </Tooltip>
+          <ActionIcon
+            size="lg"
+            onClick={async () => {
+              await actions.storeProcessRevision(templateId, process);
+              notifications.show({
+                message: "Process changes saved successfully",
+                color: "green",
+              });
+            }}
+          >
+            <IconDeviceFloppy
+              style={{ width: "70%", height: "70%" }}
+              stroke={1.5}
+            />
+          </ActionIcon>
+        </Group>
+        <ProcessView.Editable process={process} mutator={setProcess} />
       </Stack>
     </Box>
   );
