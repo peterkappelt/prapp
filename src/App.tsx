@@ -16,11 +16,11 @@ function App() {
         breakpoint: "sm",
         collapsed: { mobile: !opened },
       }}
-      aside={{
-        width: 300,
-        breakpoint: "md",
-        collapsed: { desktop: false, mobile: true },
-      }}
+      // aside={{
+      //   width: 300,
+      //   breakpoint: "md",
+      //   collapsed: { desktop: false, mobile: true },
+      // }}
       padding="md"
     >
       <AppShell.Header>
@@ -47,7 +47,7 @@ function App() {
           </Route>
         </Switch>
       </AppShell.Main>
-      <AppShell.Aside p="md">Aside</AppShell.Aside>
+      {/* <AppShell.Aside p="md">Aside</AppShell.Aside> */}
       <AppShell.Footer p="md">Footer</AppShell.Footer>
     </AppShell>
   );
