@@ -26,30 +26,59 @@ const TemplateProcess = z.object({
 });
 type TTemplateProcess = z.infer<typeof TemplateProcess>;
 
-const ExecutionStepMeta = z.object({
+const History_StepStarted = z.object({
+  type: z.literal("step_started"),
+  step: z.string().uuid(),
+  at: z.custom<Timestamp>(),
+});
+
+const History_StepDone = z.object({
+  type: z.literal("step_done"),
+  step: z.string().uuid(),
+  at: z.custom<Timestamp>(),
+});
+
+const HistoryItem = z.discriminatedUnion("type", [
+  History_StepStarted,
+  History_StepDone,
+]);
+type THistoryItem = z.infer<typeof HistoryItem>;
+
+const ProcessExecutionDTO = z.object({
+  initiatedAt: z.custom<Timestamp>(),
+  processRef: z.custom<TDocumentReference_TemplateProcess>(),
+});
+type TProcessExecutionDTO = z.infer<typeof ProcessExecutionDTO>;
+
+const ProcessExecutionStepInfo = z.object({
   startedAt: z.custom<Timestamp>().optional(),
   doneAt: z.custom<Timestamp>().optional(),
 });
-type TExecutionStepMeta = z.infer<typeof ExecutionStepMeta>;
+type TProcessExecutionStepInfo = z.infer<typeof ProcessExecutionStepInfo>;
 
-const ProcessExecution = z.object({
-  initiatedAt: z.custom<Timestamp>(),
-  steps: z.record(z.string().uuid(), ExecutionStepMeta),
-  processRef: z.custom<TDocumentReference_TemplateProcess>(),
-});
+const ProcessExecution = ProcessExecutionDTO.merge(TemplateProcess).merge(
+  z.object({
+    activeSectionIdx: z.number(),
+    activeStepIdx: z.number(),
+    stepInfo: z.record(z.string().uuid(), ProcessExecutionStepInfo),
+  })
+);
 type TProcessExecution = z.infer<typeof ProcessExecution>;
 
 export {
   TemplateProcess,
   TemplateSection,
   TemplateStep,
+  ProcessExecutionDTO,
   ProcessExecution,
-  ExecutionStepMeta,
+  HistoryItem,
 };
 export type {
   TTemplateProcess,
   TTemplateSection,
   TTemplateStep,
-  TExecutionStepMeta,
+  TProcessExecutionDTO,
   TProcessExecution,
+  THistoryItem,
+  TProcessExecutionStepInfo,
 };

@@ -5,7 +5,7 @@ import {
   TemplateSection,
 } from "@/types";
 import { TextInput, Timeline, TimelineProps, Title } from "@mantine/core";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 import { ProcessSection } from "./ProcessSection";
 
 interface ProcessViewProps {
@@ -23,63 +23,27 @@ interface ProcessViewEditableProps extends ProcessViewProps {
 }
 
 interface ProcessViewExecutionProps extends ProcessViewProps {
-  execution: Omit<TProcessExecution, "processRef">;
+  process: TProcessExecution;
   onStepStart: (stepId: string) => void;
   onStepDone: (stepId: string) => void;
 }
 
 function ProcessViewExecution({
-  execution,
   onStepStart,
   onStepDone,
+  process,
   ...props
 }: ProcessViewExecutionProps) {
-  // TODO I don't like how bulky this is
-  const [activeSection, activeStep] = useMemo(() => {
-    // create an array [sec_idx][step_idx] = execution_step_id | undefined
-    const stepExecutionIds = props.process.sections.map((sec) =>
-      sec.steps.map((step) =>
-        step.id in execution.steps ? step.id : undefined
-      )
-    );
-    // create an array [sec_idx][step_idx] = done?
-    // => it is done when the execution has both startedAt and doneAt properties set
-    const stepsDone = stepExecutionIds.map((sec) =>
-      sec.map(
-        (step) =>
-          step &&
-          execution.steps[step].startedAt &&
-          execution.steps[step].doneAt
-      )
-    );
-
-    // create an array [sec_idx] = first_unfinished_step_idx
-    const firstUnfinishedStepPerSection = stepsDone.map((step) =>
-      step.findIndex((s) => !s)
-    );
-
-    // determine the first sec_idx, where there is an unfinished step
-    const firstUnfinishedSection = firstUnfinishedStepPerSection.findIndex(
-      (s) => s != -1
-    );
-
-    if (firstUnfinishedSection == -1) return [0, 0];
-    return [
-      firstUnfinishedSection,
-      firstUnfinishedStepPerSection[firstUnfinishedSection],
-    ];
-  }, [execution.steps, props.process.sections]);
-
   return (
-    <ProcessView {...props}>
+    <ProcessView process={process} {...props}>
       {(sec, sec_idx) => (
         <ProcessSection.Execution
           key={sec.id}
-          activeStep={activeStep}
-          isActive={activeSection == sec_idx}
-          isCompleted={activeSection > sec_idx}
+          activeStep={process.activeStepIdx}
+          isActive={process.activeSectionIdx == sec_idx}
+          isCompleted={process.activeSectionIdx > sec_idx}
           section={sec}
-          execution={execution}
+          process={process}
           onStepDone={onStepDone}
           onStepStart={onStepStart}
         />

@@ -1,4 +1,4 @@
-import { TExecutionStepMeta, TTemplateStep } from "@/types";
+import { TProcessExecutionStepInfo, TTemplateStep } from "@/types";
 import {
   ActionIcon,
   Card,
@@ -38,14 +38,14 @@ interface ProcessStepEditableProps extends ProcessStepProps {
 }
 
 interface ProcessStepExecutionProps extends ProcessStepProps {
-  execution?: TExecutionStepMeta;
+  executionInfo: TProcessExecutionStepInfo;
   isNext?: boolean;
   onStart: () => void;
   onDone: () => void;
 }
 
 function ProcessStepExecution({
-  execution,
+  executionInfo,
   onStart,
   onDone,
   isNext = false,
@@ -58,8 +58,11 @@ function ProcessStepExecution({
   //  - isActive: step is started, but not done yet
   //  - isDone: step is done
   const [isActive, isDone] = useMemo(
-    () => [!!execution?.startedAt && !execution.doneAt, !!execution?.doneAt],
-    [execution]
+    () => [
+      !!executionInfo.startedAt && !executionInfo.doneAt,
+      !!executionInfo.doneAt,
+    ],
+    [executionInfo]
   );
 
   // the "next" and "done" state gets a thicker border (2*)
@@ -120,31 +123,36 @@ function ProcessStepExecution({
               )}
             </Group>
           </Grid.Col>
-          {(isNext || isActive || isDone) && <Grid.Col span={12}>
-            <Stepper
-              size={isMobile ? "xs" : "sm"}
-              active={stepperStep}
-              orientation={isMobile ? "vertical" : "horizontal"}
-            >
-              <Stepper.Step
-                label="Started"
-                description={
-                  execution?.startedAt && execution.startedAt.toDate().toLocaleString()
-                }
-              />
-              <Stepper.Step
-                icon={<IconSettings />}
-                completedIcon={<IconSettings />}
-              />
-              <Stepper.Step
-                label="Done"
-                description={
-                  execution?.doneAt && execution.doneAt.toDate().toLocaleString()
-                }
-                mih={0}
-              />
-            </Stepper>
-          </Grid.Col>}
+          {(isNext || isActive || isDone) && (
+            <Grid.Col span={12}>
+              <Stepper
+                size={isMobile ? "xs" : "sm"}
+                active={stepperStep}
+                orientation={isMobile ? "vertical" : "horizontal"}
+              >
+                <Stepper.Step
+                  label="Started"
+                  completedIcon={<IconPlayerPlay />}
+                  description={
+                    executionInfo.startedAt &&
+                    executionInfo.startedAt.toDate().toLocaleString()
+                  }
+                />
+                <Stepper.Step
+                  icon={<IconSettings />}
+                  completedIcon={<IconSettings />}
+                />
+                <Stepper.Step
+                  label="Done"
+                  description={
+                    executionInfo.doneAt &&
+                    executionInfo.doneAt.toDate().toLocaleString()
+                  }
+                  mih={0}
+                />
+              </Stepper>
+            </Grid.Col>
+          )}
         </Grid>
       }
       {...props}

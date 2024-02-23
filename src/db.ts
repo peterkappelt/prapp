@@ -12,15 +12,21 @@ import {
   query,
   serverTimestamp,
 } from "firebase/firestore";
-import { TProcessExecution, TTemplateProcess } from "./types";
+import {
+  THistoryItem,
+  TProcessExecutionDTO,
+  TTemplateProcess,
+} from "./types";
 
 type TCollectionReference_TemplateProcess =
   CollectionReference<TTemplateProcess>;
 type TCollectionReference_ProcessExecution =
-  CollectionReference<TProcessExecution>;
+  CollectionReference<TProcessExecutionDTO>;
+type TCollectionReference_HistoryItem = CollectionReference<THistoryItem>;
 
 type TDocumentReference_TemplateProcess = DocumentReference<TTemplateProcess>;
-type TDocumentReference_ProcessExecution = DocumentReference<TProcessExecution>;
+type TDocumentReference_ProcessExecution =
+  DocumentReference<TProcessExecutionDTO>;
 
 const firebaseConfig = {
   apiKey: "AIzaSyBV2QeJYu44suzhebbPCyY6-LjQ3AFQ6EM",
@@ -46,6 +52,13 @@ const collections = {
       "Revisions"
     ) as TCollectionReference_TemplateProcess,
   execution: collection(db, "Exec") as TCollectionReference_ProcessExecution,
+  executionHistory: (executionId: string) =>
+    collection(
+      db,
+      "Exec",
+      executionId,
+      "History"
+    ) as TCollectionReference_HistoryItem,
 };
 
 const docs = {
@@ -84,7 +97,6 @@ const actions = {
     return await addDoc(collections.execution, {
       processRef,
       initiatedAt: serverTimestamp(),
-      steps: {},
     });
   },
 };

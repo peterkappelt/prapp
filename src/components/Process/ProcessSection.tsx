@@ -34,7 +34,7 @@ interface ProcessSectionEditableProps extends ProcessSectionProps {
 }
 
 interface ProcessSectionExecutionProps extends ProcessSectionProps {
-  execution: Omit<TProcessExecution, "processRef">;
+  process: TProcessExecution; // TODO we shouldnt need to pass the whole object here
   activeStep: number;
   onStepStart: (stepId: string) => void;
   onStepDone: (stepId: string) => void;
@@ -43,7 +43,7 @@ interface ProcessSectionExecutionProps extends ProcessSectionProps {
 }
 
 function ProcessSectionExecution({
-  execution,
+  process,
   activeStep,
   onStepStart,
   onStepDone,
@@ -64,8 +64,8 @@ function ProcessSectionExecution({
     >
       {(step, step_idx) => (
         <ProcessStep.Execution
+          executionInfo={process.stepInfo[step.id]}
           step={step}
-          execution={execution.steps[step.id]}
           isNext={isActive && step_idx == activeStep}
           onStart={() => onStepStart(step.id)}
           onDone={() => onStepDone(step.id)}
