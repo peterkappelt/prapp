@@ -1,4 +1,9 @@
-import { TTemplateSection, TTemplateStep, TemplateStep } from "@/types";
+import {
+  TProcessExecution,
+  TTemplateSection,
+  TTemplateStep,
+  TemplateStep,
+} from "@/types";
 import {
   ActionIcon,
   Button,
@@ -6,6 +11,7 @@ import {
   Stack,
   TextInput,
   Timeline,
+  TimelineItemProps,
   Title,
   Tooltip,
 } from "@mantine/core";
@@ -16,6 +22,7 @@ import { ProcessStep } from "./ProcessStep";
 interface ProcessSectionProps {
   section: TTemplateSection;
   title?: React.ReactNode;
+  timelineItemProps?: TimelineItemProps;
   children?: (step: TTemplateStep, step_idx: number) => React.ReactNode;
   extraChildren?: React.ReactNode | React.ReactNode[];
 }
@@ -24,6 +31,48 @@ interface ProcessSectionEditableProps extends ProcessSectionProps {
   mutator: (func: (section: TTemplateSection) => undefined) => void;
   onSectionAdd: () => void;
   onDelete: () => void;
+}
+
+interface ProcessSectionExecutionProps extends ProcessSectionProps {
+  execution: Omit<TProcessExecution, "processRef">;
+  activeStep: number;
+  onStepStart: (stepId: string) => void;
+  onStepDone: (stepId: string) => void;
+  isActive: boolean;
+  isCompleted: boolean;
+}
+
+function ProcessSectionExecution({
+  execution,
+  activeStep,
+  onStepStart,
+  onStepDone,
+  isActive,
+  isCompleted,
+  ...props
+}: ProcessSectionExecutionProps) {
+  return (
+    <ProcessSection
+      // overwriting the internal __active and __lineActive props is dirty,
+      // but I don't know a better way yet since Timeline requires Timeline.Item
+      // to be a direct child
+      timelineItemProps={{
+        __active: isActive || isCompleted,
+        __lineActive: isCompleted,
+      }}
+      {...props}
+    >
+      {(step, step_idx) => (
+        <ProcessStep.Execution
+          step={step}
+          execution={execution.steps[step.id]}
+          isNext={isActive && step_idx == activeStep}
+          onStart={() => onStepStart(step.id)}
+          onDone={() => onStepDone(step.id)}
+        />
+      )}
+    </ProcessSection>
+  );
 }
 
 function ProcessSectionEditable({
@@ -94,12 +143,16 @@ function ProcessSectionEditable({
 
 function ProcessSection({
   section,
+  timelineItemProps,
   title,
   children,
   extraChildren,
 }: ProcessSectionProps) {
   return (
-    <Timeline.Item title={title ?? <Title order={2}>{section.title}</Title>}>
+    <Timeline.Item
+      title={title ?? <Title order={2}>{section.title}</Title>}
+      {...timelineItemProps}
+    >
       <Stack gap="sm" mt="md">
         {section.steps.map((step, step_idx) =>
           children ? (
@@ -144,5 +197,6 @@ function AddButtons({
 }
 
 ProcessSection.Editable = ProcessSectionEditable;
+ProcessSection.Execution = ProcessSectionExecution;
 
 export { ProcessSection };

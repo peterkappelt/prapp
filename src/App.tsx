@@ -1,6 +1,7 @@
 import { AppShell, Burger, Group, Skeleton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Route, Switch } from "wouter";
+import { ProcessExecutionView } from "./ProcessExecutionView";
 import TemplateProcessEditor from "./TemplateProcessEditor";
 
 function App() {
@@ -40,6 +41,9 @@ function App() {
         <Switch>
           <Route path="/template/:id">
             {(params) => <TemplateProcessEditor templateId={params.id} />}
+          </Route>
+          <Route path="/execution/:id">
+            {(params) => <ProcessExecutionView executionId={params.id} />}
           </Route>
         </Switch>
       </AppShell.Main>

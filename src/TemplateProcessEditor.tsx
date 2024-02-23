@@ -1,26 +1,32 @@
-import { TemplateProcess } from "@/types";
+import { TTemplateProcess, TemplateProcess } from "@/types";
 import { ProcessView } from "@components/Process/ProcessView";
 import { Box, Button, LoadingOverlay, Stack, Switch } from "@mantine/core";
-import { addDoc, collection, doc, getDoc } from "firebase/firestore";
+import { notifications } from "@mantine/notifications";
+import { DocumentData, DocumentReference } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useImmer } from "use-immer";
-import { collections, db, queries, storeProcessRevision } from "./db";
+import { useLocation } from "wouter";
+import { actions, queries } from "./db";
 
 function TemplateProcessEditor({ templateId }: { templateId: string }) {
+  const [, setLocation] = useLocation();
   const [editable, setEditable] = useState(true);
   const [loading, setLoading] = useState(true);
   const [process, setProcess] = useImmer(TemplateProcess.parse({}));
+  const [docRef, setDocRef] =
+    useState<DocumentReference<TTemplateProcess, DocumentData>>();
 
   useEffect(() => {
     let active = true;
     const do_query = async () => {
-      const data = await queries.getLatestTemplateProcessVersion(templateId);
+      const res = await queries.getLatestTemplateProcessVersion(templateId);
       if (!active) return;
-      if (!data) {
+      if (!res) {
         setLoading(false);
         return;
       }
-      setProcess(data);
+      setProcess(res.data());
+      setDocRef(res.ref);
       setLoading(false);
     };
     do_query();
@@ -38,18 +44,22 @@ function TemplateProcessEditor({ templateId }: { templateId: string }) {
           onChange={(e) => setEditable(e.currentTarget.checked)}
           label="Editable"
         />
-        <Button onClick={() => storeProcessRevision(templateId, process)}>
+        <Button
+          onClick={() => actions.storeProcessRevision(templateId, process)}
+        >
           Save
         </Button>
         <Button
           onClick={async () => {
-            const res = await addDoc(collection(db, "Exec"), {
-              reference: doc(
-                collections.templateProcessRevisions(templateId),
-                "ddQS70nOvrSS7OQxB6E6"
-              ),
-            });
-            console.log((await getDoc(res)).data());
+            if (!docRef) {
+              notifications.show({
+                message: "Process needs to be saved first",
+                color: "red",
+              });
+              return;
+            }
+            const res = await actions.startProcessExecution(docRef);
+            setLocation(`/execution/${res.id}`);
           }}
         >
           exec

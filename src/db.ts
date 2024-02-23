@@ -1,8 +1,10 @@
 import { initializeApp } from "firebase/app";
 import {
   CollectionReference,
+  DocumentReference,
   addDoc,
   collection,
+  doc,
   getDocs,
   getFirestore,
   limit,
@@ -10,7 +12,15 @@ import {
   query,
   serverTimestamp,
 } from "firebase/firestore";
-import { TTemplateProcess } from "./types";
+import { TProcessExecution, TTemplateProcess } from "./types";
+
+type TCollectionReference_TemplateProcess =
+  CollectionReference<TTemplateProcess>;
+type TCollectionReference_ProcessExecution =
+  CollectionReference<TProcessExecution>;
+
+type TDocumentReference_TemplateProcess = DocumentReference<TTemplateProcess>;
+type TDocumentReference_ProcessExecution = DocumentReference<TProcessExecution>;
 
 const firebaseConfig = {
   apiKey: "AIzaSyBV2QeJYu44suzhebbPCyY6-LjQ3AFQ6EM",
@@ -24,9 +34,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Initialize Cloud Firestore and get a reference to the service
-export const db = getFirestore(app);
+const db = getFirestore(app);
 
-export const collections = {
+const collections = {
   /** Schema: TemplateProcesses/<id of the template>/Revisions/<random firebase id> => TTemplateProcess*/
   templateProcessRevisions: (templateId: string) =>
     collection(
@@ -34,10 +44,16 @@ export const collections = {
       "TemplateProcesses",
       templateId,
       "Revisions"
-    ) as CollectionReference<TTemplateProcess>,
+    ) as TCollectionReference_TemplateProcess,
+  execution: collection(db, "Exec") as TCollectionReference_ProcessExecution,
 };
 
-export const queries = {
+const docs = {
+  execution: (executionId: string) =>
+    doc(db, "Exec", executionId) as TDocumentReference_ProcessExecution,
+};
+
+const queries = {
   getLatestTemplateProcessVersion: async (templateId: string) => {
     const res = await getDocs(
       query(
@@ -47,17 +63,37 @@ export const queries = {
       )
     );
     if (res.empty) return;
-    return res.docs[0].data();
+    return res.docs[0];
   },
 };
 
-export const storeProcessRevision = async (
-  templateId: string,
-  process: TTemplateProcess
-) => {
-  const res = await addDoc(collections.templateProcessRevisions(templateId), {
-    ...process,
-    createdAt: serverTimestamp(),
-  });
-  return res;
+const actions = {
+  storeProcessRevision: async (
+    templateId: string,
+    process: TTemplateProcess
+  ) => {
+    const res = await addDoc(collections.templateProcessRevisions(templateId), {
+      ...process,
+      createdAt: serverTimestamp(),
+    });
+    return res;
+  },
+  startProcessExecution: async (
+    processRef: TDocumentReference_TemplateProcess
+  ) => {
+    return await addDoc(collections.execution, {
+      processRef,
+      initiatedAt: serverTimestamp(),
+      steps: {},
+    });
+  },
+};
+
+export { db, collections, docs, queries, actions };
+
+export type {
+  TCollectionReference_ProcessExecution,
+  TCollectionReference_TemplateProcess,
+  TDocumentReference_ProcessExecution,
+  TDocumentReference_TemplateProcess,
 };

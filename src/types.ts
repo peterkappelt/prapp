@@ -1,5 +1,6 @@
-import { DocumentData, DocumentReference } from "firebase/firestore";
+import { Timestamp } from "firebase/firestore";
 import { z } from "zod";
+import { TDocumentReference_TemplateProcess } from "./db";
 
 const uuid4 = () => crypto.randomUUID();
 
@@ -26,19 +27,15 @@ const TemplateProcess = z.object({
 type TTemplateProcess = z.infer<typeof TemplateProcess>;
 
 const ExecutionStepMeta = z.object({
-  startedAt: z.date(),
-  doneAt: z.date().optional(),
+  startedAt: z.custom<Timestamp>().optional(),
+  doneAt: z.custom<Timestamp>().optional(),
 });
+type TExecutionStepMeta = z.infer<typeof ExecutionStepMeta>;
 
 const ProcessExecution = z.object({
-  initiatedAt: z.date(),
-  steps: z.array(ExecutionStepMeta),
-  processRef: z
-    .object({})
-    .refine(
-      (x: object): x is DocumentReference<TTemplateProcess, DocumentData> =>
-        x instanceof DocumentReference
-    ),
+  initiatedAt: z.custom<Timestamp>(),
+  steps: z.record(z.string().uuid(), ExecutionStepMeta),
+  processRef: z.custom<TDocumentReference_TemplateProcess>(),
 });
 type TProcessExecution = z.infer<typeof ProcessExecution>;
 
@@ -53,5 +50,6 @@ export type {
   TTemplateProcess,
   TTemplateSection,
   TTemplateStep,
+  TExecutionStepMeta,
   TProcessExecution,
 };
