@@ -134,7 +134,7 @@ export function ProcessExecutionView({ executionId }: { executionId: string }) {
     };
   }, [executionMeta?.processRef.path, setTemplate]);
 
-  const info = useMemo(
+  const process = useMemo(
     () => mergeProcessExecution(template, executionMeta, history),
     [template, executionMeta, history]
   );
@@ -163,11 +163,11 @@ export function ProcessExecutionView({ executionId }: { executionId: string }) {
 
   return (
     <Box pos="relative">
-      <LoadingOverlay visible={!executionMeta || !template || !history} />
+      <LoadingOverlay visible={!process} />
       <Stack>
-        {info && (
+        {process && (
           <ProcessView.Execution
-            process={info}
+            process={process}
             onStepDone={onStepDone}
             onStepStart={onStepStart}
           />
