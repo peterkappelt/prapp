@@ -50,17 +50,26 @@ const ProcessExecutionDTO = z.object({
 });
 type TProcessExecutionDTO = z.infer<typeof ProcessExecutionDTO>;
 
-const ProcessExecutionStepInfo = z.object({
-  startedAt: z.custom<Timestamp>().optional(),
-  doneAt: z.custom<Timestamp>().optional(),
-});
-type TProcessExecutionStepInfo = z.infer<typeof ProcessExecutionStepInfo>;
+const ExecutionStep = TemplateStep.merge(
+  z.object({
+    state: z.union([z.literal("active"), z.literal("done")]).optional(),
+    startedAt: z.custom<Timestamp>().optional(),
+    doneAt: z.custom<Timestamp>().optional(),
+  })
+);
+type TExecutionStep = z.infer<typeof ExecutionStep>;
+
+const ExecutionSection = TemplateSection.merge(
+  z.object({
+    steps: z.array(ExecutionStep),
+    state: z.union([z.literal("active"), z.literal("done")]).optional(),
+  })
+);
+type TExecutionSection = z.infer<typeof ExecutionSection>;
 
 const ProcessExecution = ProcessExecutionDTO.merge(TemplateProcess).merge(
   z.object({
-    activeSectionIdx: z.number(),
-    activeStepIdx: z.number(),
-    stepInfo: z.record(z.string().uuid(), ProcessExecutionStepInfo),
+    sections: z.array(ExecutionSection),
   })
 );
 type TProcessExecution = z.infer<typeof ProcessExecution>;
@@ -80,5 +89,6 @@ export type {
   TProcessExecutionDTO,
   TProcessExecution,
   THistoryItem,
-  TProcessExecutionStepInfo,
+  TExecutionSection,
+  TExecutionStep,
 };

@@ -13,13 +13,21 @@ import { collections, docs } from "./db";
 import {
   HistoryItem,
   ProcessExecutionDTO,
+  TExecutionSection,
+  TExecutionStep,
   THistoryItem,
   TProcessExecution,
   TProcessExecutionDTO,
-  TProcessExecutionStepInfo,
   TTemplateProcess,
 } from "./types";
 
+/** 
+ * Merge a template process with an 
+ * execution metadata object and the history
+ * to a TProcessExecution object, which is
+ * a TTemplateProcess enriched with execution
+ * information
+ */
 const mergeProcessExecution = (
   template?: TTemplateProcess,
   executionMeta?: TProcessExecutionDTO,
@@ -27,47 +35,45 @@ const mergeProcessExecution = (
 ): TProcessExecution | undefined => {
   if (!template || !executionMeta || !history) return;
 
-  const stepInfo = template.sections
-    .map((s) => s.steps)
-    .flat()
-    .reduce<Record<string, TProcessExecutionStepInfo>>((o, { id }) => {
-      o[id] = {
-        doneAt: history.find((h) => h.type == "step_done" && h.step == id)?.at,
-        startedAt: history.find((h) => h.type == "step_started" && h.step == id)
-          ?.at,
+  const sections = template.sections.map<TExecutionSection>((sec) => {
+    const steps = sec.steps.map<TExecutionStep>((step) => {
+      // find the startedAt and doneAt timestamps in the history
+      // TODO this assumes that history is sorted by at-time
+      const startedAt = history.find(
+        (h) => h.type == "step_started" && h.step == step.id
+      )?.at;
+      const doneAt = history.find(
+        (h) => h.type == "step_done" && h.step == step.id
+      )?.at;
+      return {
+        ...step,
+        doneAt,
+        startedAt,
+        // it is surely done if there is a timestamp for doneAt
+        state: doneAt ? "done" : undefined,
       };
-      return o;
-    }, {});
+    });
 
-  let activeStep = 0;
+    return {
+      ...sec,
+      steps,
+      // the section is surely done if each of its steps is done
+      state: steps.every((s) => s.state == "done") ? "done" : undefined,
+    };
+  });
 
-  // create an array [sec_idx][step_idx] = done?
-  // => it is done when the execution has both startedAt and doneAt properties set
-  const stepsDone = template.sections.map((sec) =>
-    sec.steps.map(
-      (step) => stepInfo[step.id].startedAt && stepInfo[step.id].doneAt
-    )
-  );
-
-  // create an array [sec_idx] = first_unfinished_step_idx
-  const firstUnfinishedStepPerSection = stepsDone.map((step) =>
-    step.findIndex((s) => !s)
-  );
-
-  // determine the first sec_idx, where there is an unfinished step
-  let activeSection = firstUnfinishedStepPerSection.findIndex((s) => s != -1);
-  if (activeSection == -1) {
-    activeSection = 0;
-  } else {
-    activeStep = firstUnfinishedStepPerSection[activeSection];
+  //find the first step/ section that is not done and mark as active
+  const activeSec = sections.find((s) => s.state != "done");
+  if (activeSec) {
+    activeSec.state = "active";
+    const activeStep = activeSec.steps.find((s) => s.state != "done");
+    if (activeStep) activeStep.state = "active";
   }
 
   return {
     ...template,
     ...executionMeta,
-    stepInfo,
-    activeSectionIdx: activeSection,
-    activeStepIdx: activeStep,
+    sections,
   };
 };
 

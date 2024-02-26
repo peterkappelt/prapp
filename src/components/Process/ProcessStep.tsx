@@ -1,4 +1,7 @@
-import { TProcessExecutionStepInfo, TTemplateStep } from "@/types";
+import {
+  TExecutionStep,
+  TTemplateStep
+} from "@/types";
 import {
   ActionIcon,
   Card,
@@ -38,55 +41,44 @@ interface ProcessStepEditableProps extends ProcessStepProps {
 }
 
 interface ProcessStepExecutionProps extends ProcessStepProps {
-  executionInfo: TProcessExecutionStepInfo;
+  step: TExecutionStep;
   isNext?: boolean;
   onStart: () => void;
   onDone: () => void;
 }
 
 function ProcessStepExecution({
-  executionInfo,
+  step,
   onStart,
   onDone,
-  isNext = false,
   ...props
 }: ProcessStepExecutionProps) {
   const isMobile = useMediaQuery(`(max-width: 62em)`);
 
-  // state meanings:
-  //  - isNext: this step is the next to be started or the current active one
-  //  - isActive: step is started, but not done yet
-  //  - isDone: step is done
-  const [isActive, isDone] = useMemo(
-    () => [
-      !!executionInfo.startedAt && !executionInfo.doneAt,
-      !!executionInfo.doneAt,
-    ],
-    [executionInfo]
-  );
-
   // the "next" and "done" state gets a thicker border (2*)
   const borderWidth = useMemo(
-    () =>
-      isNext || isDone ? "calc(2*.0625rem*var(--mantine-scale))" : undefined,
-    [isNext, isDone]
+    () => (step.state ? "calc(2*.0625rem*var(--mantine-scale))" : undefined),
+    [step.state]
   );
 
   // colored border and shadow
   const [borderColor, shadow] = useMemo(() => {
-    if (isDone) return ["var(--mantine-color-green-filled)", "sm-green"];
-    if (isNext) return ["var(--mantine-color-blue-filled)", "sm-blue"];
+    if (step.state == "done")
+      return ["var(--mantine-color-green-filled)", "sm-green"];
+    if (step.state == "active")
+      return ["var(--mantine-color-blue-filled)", "sm-blue"];
     return [undefined, "sm"];
-  }, [isNext, isDone]);
+  }, [step.state]);
 
   const stepperStep = useMemo(() => {
-    if (isDone) return 3;
-    if (isActive) return 1;
+    if (step.doneAt) return 3;
+    if (step.startedAt) return 1;
     return 0;
-  }, [isActive, isDone]);
+  }, [step.doneAt, step.startedAt]);
 
   return (
     <ProcessStep
+      step={step}
       cardProps={{
         styles: {
           root: {
@@ -100,8 +92,8 @@ function ProcessStepExecution({
         <Grid mt="sm" mb="sm">
           <Grid.Col span={12}>
             <Group justify="space-between">
-              <Title order={3}>{props.step.title}</Title>
-              {isNext && !isActive && (
+              <Title order={3}>{step.title}</Title>
+              {step.state == "active" && !step.startedAt && (
                 <Tooltip label="Start this step">
                   <ActionIcon variant="filled" size="lg" onClick={onStart}>
                     <IconPlayerPlay
@@ -111,7 +103,7 @@ function ProcessStepExecution({
                   </ActionIcon>
                 </Tooltip>
               )}
-              {isActive && (
+              {step.state == "active" && step.startedAt && !step.doneAt && (
                 <Tooltip label="Mark this step as done">
                   <ActionIcon variant="filled" size="lg" onClick={onDone}>
                     <IconCircleCheck
@@ -123,7 +115,7 @@ function ProcessStepExecution({
               )}
             </Group>
           </Grid.Col>
-          {(isNext || isActive || isDone) && (
+          {(step.state) && (
             <Grid.Col span={12}>
               <Stepper
                 size={isMobile ? "xs" : "sm"}
@@ -134,8 +126,8 @@ function ProcessStepExecution({
                   label="Started"
                   completedIcon={<IconPlayerPlay />}
                   description={
-                    executionInfo.startedAt &&
-                    executionInfo.startedAt.toDate().toLocaleString()
+                    step.startedAt &&
+                    step.startedAt.toDate().toLocaleString()
                   }
                 />
                 <Stepper.Step
@@ -145,8 +137,8 @@ function ProcessStepExecution({
                 <Stepper.Step
                   label="Done"
                   description={
-                    executionInfo.doneAt &&
-                    executionInfo.doneAt.toDate().toLocaleString()
+                    step.doneAt &&
+                    step.doneAt.toDate().toLocaleString()
                   }
                   mih={0}
                 />

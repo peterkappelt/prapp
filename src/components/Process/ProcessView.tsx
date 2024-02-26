@@ -1,19 +1,18 @@
 import {
   TProcessExecution,
   TTemplateProcess,
-  TTemplateSection,
-  TemplateSection,
+  TemplateSection
 } from "@/types";
 import { TextInput, Timeline, TimelineProps, Title } from "@mantine/core";
 import React, { useCallback } from "react";
 import { ProcessSection } from "./ProcessSection";
 
-interface ProcessViewProps {
-  process: TTemplateProcess;
+interface ProcessViewProps<T extends TTemplateProcess = TTemplateProcess>{
+  process: T;
   title?: React.ReactNode;
   timelineProps?: TimelineProps;
   children?: (
-    section: TTemplateSection,
+    section: T["sections"][0],
     section_idx: number
   ) => React.ReactNode;
 }
@@ -22,8 +21,7 @@ interface ProcessViewEditableProps extends ProcessViewProps {
   mutator: (func: (section: TTemplateProcess) => undefined) => void;
 }
 
-interface ProcessViewExecutionProps extends ProcessViewProps {
-  process: TProcessExecution;
+interface ProcessViewExecutionProps extends ProcessViewProps<TProcessExecution> {
   onStepStart: (stepId: string) => void;
   onStepDone: (stepId: string) => void;
 }
@@ -36,14 +34,10 @@ function ProcessViewExecution({
 }: ProcessViewExecutionProps) {
   return (
     <ProcessView process={process} {...props}>
-      {(sec, sec_idx) => (
+      {(sec) => (
         <ProcessSection.Execution
           key={sec.id}
-          activeStep={process.activeStepIdx}
-          isActive={process.activeSectionIdx == sec_idx}
-          isCompleted={process.activeSectionIdx > sec_idx}
           section={sec}
-          process={process}
           onStepDone={onStepDone}
           onStepStart={onStepStart}
         />
@@ -96,12 +90,12 @@ function ProcessViewEditable({ mutator, ...props }: ProcessViewEditableProps) {
   );
 }
 
-function ProcessView({
+function ProcessView<T extends TTemplateProcess = TTemplateProcess>({
   process,
   timelineProps,
   title,
   children,
-}: ProcessViewProps) {
+}: ProcessViewProps<T>) {
   return (
     <>
       {title ?? <Title order={1}>{process.title}</Title>}

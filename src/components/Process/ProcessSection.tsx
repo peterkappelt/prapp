@@ -1,5 +1,5 @@
 import {
-  TProcessExecution,
+  TExecutionSection,
   TTemplateSection,
   TTemplateStep,
   TemplateStep,
@@ -34,21 +34,15 @@ interface ProcessSectionEditableProps extends ProcessSectionProps {
 }
 
 interface ProcessSectionExecutionProps extends ProcessSectionProps {
-  process: TProcessExecution; // TODO we shouldnt need to pass the whole object here
-  activeStep: number;
+  section: TExecutionSection;
   onStepStart: (stepId: string) => void;
   onStepDone: (stepId: string) => void;
-  isActive: boolean;
-  isCompleted: boolean;
 }
 
 function ProcessSectionExecution({
-  process,
-  activeStep,
+  section,
   onStepStart,
   onStepDone,
-  isActive,
-  isCompleted,
   ...props
 }: ProcessSectionExecutionProps) {
   return (
@@ -57,16 +51,16 @@ function ProcessSectionExecution({
       // but I don't know a better way yet since Timeline requires Timeline.Item
       // to be a direct child
       timelineItemProps={{
-        __active: isActive || isCompleted,
-        __lineActive: isCompleted,
+        __active: section.state == "active" || section.state == "done",
+        __lineActive: section.state == "done",
+        color: section.state == "done" ? "green" : undefined,
       }}
+      section={section}
       {...props}
     >
-      {(step, step_idx) => (
+      {(step) => (
         <ProcessStep.Execution
-          executionInfo={process.stepInfo[step.id]}
           step={step}
-          isNext={isActive && step_idx == activeStep}
           onStart={() => onStepStart(step.id)}
           onDone={() => onStepDone(step.id)}
         />
