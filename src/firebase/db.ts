@@ -1,4 +1,3 @@
-import { initializeApp } from "firebase/app";
 import {
   CollectionReference,
   DocumentReference,
@@ -12,11 +11,8 @@ import {
   query,
   serverTimestamp,
 } from "firebase/firestore";
-import {
-  THistoryItem,
-  TProcessExecutionDTO,
-  TTemplateProcess,
-} from "./types";
+import { THistoryItem, TProcessExecutionDTO, TTemplateProcess } from "../types";
+import { app } from "./conf";
 
 type TCollectionReference_TemplateProcess =
   CollectionReference<TTemplateProcess>;
@@ -28,21 +24,11 @@ type TDocumentReference_TemplateProcess = DocumentReference<TTemplateProcess>;
 type TDocumentReference_ProcessExecution =
   DocumentReference<TProcessExecutionDTO>;
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBV2QeJYu44suzhebbPCyY6-LjQ3AFQ6EM",
-  authDomain: "prapp-a04b0.firebaseapp.com",
-  projectId: "prapp-a04b0",
-  storageBucket: "prapp-a04b0.appspot.com",
-  messagingSenderId: "997063427666",
-  appId: "1:997063427666:web:908ef1c4c856d9ddbd018b",
-};
-
-const app = initializeApp(firebaseConfig);
-
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
 
 const collections = {
+  templateProcesses: () => collection(db, "TemplateProcesses"),
   /** Schema: TemplateProcesses/<id of the template>/Revisions/<random firebase id> => TTemplateProcess*/
   templateProcessRevisions: (templateId: string) =>
     collection(
@@ -77,6 +63,10 @@ const queries = {
     );
     if (res.empty) return;
     return res.docs[0];
+  },
+  getAvailableTemplates: async () => {
+    const res = await getDocs(query(collections.templateProcesses()));
+    console.log(res.docs);
   },
 };
 

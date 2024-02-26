@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import { z } from "zod";
-import { TDocumentReference_TemplateProcess } from "./db";
+import { TDocumentReference_TemplateProcess } from "./firebase/db";
 
 const uuid4 = () => crypto.randomUUID();
 

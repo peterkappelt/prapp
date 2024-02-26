@@ -9,7 +9,7 @@ import {
 import { useCallback, useEffect, useMemo } from "react";
 import { useImmer } from "use-immer";
 import { ProcessView } from "./components/Process/ProcessView";
-import { collections, docs } from "./db";
+import { collections, docs } from "./firebase/db";
 import {
   HistoryItem,
   ProcessExecutionDTO,
