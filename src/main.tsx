@@ -6,13 +6,16 @@ import "@mantine/tiptap/styles.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
+import { AuthContext } from "./firebase/auth.tsx";
 import { theme } from "./theme.ts";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <MantineProvider theme={theme}>
-      <Notifications />
-      <App />
+      <AuthContext>
+        <Notifications />
+        <App />
+      </AuthContext>
     </MantineProvider>
   </React.StrictMode>
 );
