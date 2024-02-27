@@ -1,13 +1,16 @@
 import {
   Box,
+  Button,
   Card,
   Grid,
+  Group,
   LoadingOverlay,
   Skeleton,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
+import { IconPlus } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import { useLocation } from "wouter";
@@ -85,6 +88,7 @@ export const TemplateProcessCard = ({
 };
 
 export const TemplateList = () => {
+  const [, setLocation] = useLocation();
   const [templates, setTemplates] = useImmer<TTemplateMetas>({});
 
   useEffect(() => {
@@ -109,6 +113,14 @@ export const TemplateList = () => {
 
   return (
     <Stack>
+      <Group justify="flex-end">
+        <Button
+          leftSection={<IconPlus size={14} />}
+          onClick={() => setLocation(`/template/${crypto.randomUUID()}`)}
+        >
+          New Process
+        </Button>
+      </Group>
       {Object.entries(templates).map(([id, meta]) => (
         <TemplateProcessCard key={id} id={id} meta={meta} />
       ))}
