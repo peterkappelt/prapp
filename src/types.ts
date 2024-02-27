@@ -36,12 +36,14 @@ const History_StepStarted = z.object({
   type: z.literal("step_started"),
   step: z.string().uuid(),
   at: z.custom<Timestamp>(),
+  by: z.string(),
 });
 
 const History_StepDone = z.object({
   type: z.literal("step_done"),
   step: z.string().uuid(),
   at: z.custom<Timestamp>(),
+  by: z.string(),
 });
 
 const HistoryItem = z.discriminatedUnion("type", [

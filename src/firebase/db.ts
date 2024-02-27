@@ -101,6 +101,18 @@ const actions = {
       initiatedBy: auth.currentUser?.uid,
     });
   },
+  historyMarkStepAs: async (
+    executionId: string,
+    stepId: string,
+    as: "step_started" | "step_done"
+  ) => {
+    addDoc(collections.executionHistory(executionId), {
+      type: as,
+      step: stepId,
+      at: serverTimestamp(),
+      by: auth.currentUser?.uid
+    });
+  },
 };
 
 export { db, collections, docs, queries, actions };

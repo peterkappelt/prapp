@@ -1,15 +1,10 @@
 import { Box, LoadingOverlay, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import {
-  addDoc,
-  getDoc,
-  onSnapshot,
-  serverTimestamp,
-} from "firebase/firestore";
+import { getDoc, onSnapshot } from "firebase/firestore";
 import { useCallback, useEffect, useMemo } from "react";
 import { useImmer } from "use-immer";
 import { ProcessView } from "./components/Process/ProcessView";
-import { collections, docs } from "./firebase/db";
+import { actions, collections, docs } from "./firebase/db";
 import {
   HistoryItem,
   ProcessExecutionDTO,
@@ -21,8 +16,8 @@ import {
   TTemplateProcess,
 } from "./types";
 
-/** 
- * Merge a template process with an 
+/**
+ * Merge a template process with an
  * execution metadata object and the history
  * to a TProcessExecution object, which is
  * a TTemplateProcess enriched with execution
@@ -140,24 +135,13 @@ export function ProcessExecutionView({ executionId }: { executionId: string }) {
   );
 
   const onStepDone = useCallback(
-    (step: string) => {
-      addDoc(collections.executionHistory(executionId), {
-        type: "step_done",
-        step,
-        at: serverTimestamp(),
-      });
-    },
+    (step: string) => actions.historyMarkStepAs(executionId, step, "step_done"),
     [executionId]
   );
 
   const onStepStart = useCallback(
-    (step: string) => {
-      addDoc(collections.executionHistory(executionId), {
-        type: "step_started",
-        step,
-        at: serverTimestamp(),
-      });
-    },
+    (step: string) =>
+      actions.historyMarkStepAs(executionId, step, "step_started"),
     [executionId]
   );
 
