@@ -84,7 +84,8 @@ function TemplateProcessEditor({ templateId }: { templateId: string }) {
                   createdBy: user?.uid,
                 });
 
-              await actions.storeProcessRevision(templateId, process);
+              const res = await actions.storeProcessRevision(templateId, process);
+              setDocRef(res);
               notifications.show({
                 message: "Process changes saved successfully",
                 color: "green",
