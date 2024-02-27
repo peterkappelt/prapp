@@ -19,6 +19,7 @@ import {
 } from "../types";
 import { app } from "./conf";
 
+type TCollectionReference_TemplateMeta = CollectionReference<TTemplateMeta>;
 type TCollectionReference_TemplateProcess =
   CollectionReference<TTemplateProcess>;
 type TCollectionReference_ProcessExecution =
@@ -34,7 +35,8 @@ type TDocumentReference_ProcessExecution =
 const db = getFirestore(app);
 
 const collections = {
-  templateProcesses: () => collection(db, "TemplateProcesses"),
+  templateProcesses: () =>
+    collection(db, "TemplateProcesses") as TCollectionReference_TemplateMeta,
   /** Schema: TemplateProcesses/<id of the template>/Revisions/<random firebase id> => TTemplateProcess*/
   templateProcessRevisions: (templateId: string) =>
     collection(
@@ -74,7 +76,7 @@ const queries = {
   },
   getAvailableTemplates: async () => {
     const res = await getDocs(query(collections.templateProcesses()));
-    console.log(res.docs);
+    return res;
   },
 };
 

@@ -5,11 +5,10 @@ import {
   Box,
   Group,
   LoadingOverlay,
-  Stack,
-  Tooltip,
+  Stack
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconDeviceFloppy, IconPlayerPlay } from "@tabler/icons-react";
+import { IconDeviceFloppy } from "@tabler/icons-react";
 import {
   DocumentData,
   DocumentReference,
@@ -20,6 +19,7 @@ import {
 import { useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import { useLocation } from "wouter";
+import { StartExecutionButton } from "./components/Process/ActionButtons";
 import { useAuth } from "./firebase/auth";
 import { actions, docs, queries } from "./firebase/db";
 
@@ -55,34 +55,25 @@ function TemplateProcessEditor({ templateId }: { templateId: string }) {
       <LoadingOverlay visible={loading} />
       <Stack>
         <Group justify="flex-end">
-          <Tooltip
-            label={
-              docRef
-                ? "Start a tracked execution of this process"
-                : "You must save the process definition before starting an execution"
+          <StartExecutionButton
+            tooltip={
+              !docRef
+                ? "You must save the process definition before starting an execution"
+                : undefined
             }
-          >
-            <ActionIcon
-              size="lg"
-              disabled={!docRef}
-              onClick={async () => {
-                if (!docRef) {
-                  notifications.show({
-                    message: "Process needs to be saved first",
-                    color: "red",
-                  });
-                  return;
-                }
-                const res = await actions.startProcessExecution(docRef);
-                setLocation(`/execution/${res.id}`);
-              }}
-            >
-              <IconPlayerPlay
-                style={{ width: "70%", height: "70%" }}
-                stroke={1.5}
-              />
-            </ActionIcon>
-          </Tooltip>
+            disabled={!docRef}
+            onClick={async () => {
+              if (!docRef) {
+                notifications.show({
+                  message: "Process needs to be saved first",
+                  color: "red",
+                });
+                return;
+              }
+              const res = await actions.startProcessExecution(docRef);
+              setLocation(`/execution/${res.id}`);
+            }}
+          />
           <ActionIcon
             size="lg"
             onClick={async () => {

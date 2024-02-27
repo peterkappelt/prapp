@@ -1,11 +1,14 @@
-import { AppShell, Burger, Group, Skeleton } from "@mantine/core";
+import { AppShell, Burger, Group, NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Route, Switch } from "wouter";
+import { IconList } from "@tabler/icons-react";
+import { Route, Switch, useLocation } from "wouter";
 import { LoginPage } from "./Login";
 import { ProcessExecutionView } from "./ProcessExecutionView";
+import { TemplateList } from "./TemplateList";
 import TemplateProcessEditor from "./TemplateProcessEditor";
 
 function App() {
+  const [, setLocation] = useLocation();
   const [opened, { toggle }] = useDisclosure();
 
   return (
@@ -31,17 +34,19 @@ function App() {
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md">
-        Navbar
-        {Array(15)
-          .fill(0)
-          .map((_, index) => (
-            <Skeleton key={index} h={28} mt="sm" animate={false} />
-          ))}
+        <NavLink
+          onClick={() => setLocation("/template")}
+          label="Processes"
+          leftSection={<IconList size="1rem" stroke={1.5} />}
+        />
       </AppShell.Navbar>
       <AppShell.Main>
         <Switch>
           <Route path="/login">
             <LoginPage />
+          </Route>
+          <Route path="/template">
+            <TemplateList />
           </Route>
           <Route path="/template/:id">
             {(params) => <TemplateProcessEditor templateId={params.id} />}
