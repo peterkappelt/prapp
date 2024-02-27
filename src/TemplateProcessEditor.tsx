@@ -10,11 +10,18 @@ import {
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconDeviceFloppy, IconPlayerPlay } from "@tabler/icons-react";
-import { DocumentData, DocumentReference } from "firebase/firestore";
+import {
+  DocumentData,
+  DocumentReference,
+  getDoc,
+  serverTimestamp,
+  setDoc,
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import { useLocation } from "wouter";
-import { actions, queries } from "./firebase/db";
+import { useAuth } from "./firebase/auth";
+import { actions, docs, queries } from "./firebase/db";
 
 function TemplateProcessEditor({ templateId }: { templateId: string }) {
   const [, setLocation] = useLocation();
@@ -22,6 +29,7 @@ function TemplateProcessEditor({ templateId }: { templateId: string }) {
   const [process, setProcess] = useImmer(TemplateProcess.parse({}));
   const [docRef, setDocRef] =
     useState<DocumentReference<TTemplateProcess, DocumentData>>();
+  const { user } = useAuth();
 
   useEffect(() => {
     let active = true;
@@ -78,6 +86,13 @@ function TemplateProcessEditor({ templateId }: { templateId: string }) {
           <ActionIcon
             size="lg"
             onClick={async () => {
+              const meta = await getDoc(docs.templateMeta(templateId));
+              if (!meta.exists())
+                await setDoc(docs.templateMeta(templateId), {
+                  createdAt: serverTimestamp(),
+                  createdBy: user?.uid,
+                });
+
               await actions.storeProcessRevision(templateId, process);
               notifications.show({
                 message: "Process changes saved successfully",

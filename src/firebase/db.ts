@@ -11,7 +11,12 @@ import {
   query,
   serverTimestamp,
 } from "firebase/firestore";
-import { THistoryItem, TProcessExecutionDTO, TTemplateProcess } from "../types";
+import {
+  THistoryItem,
+  TProcessExecutionDTO,
+  TTemplateMeta,
+  TTemplateProcess,
+} from "../types";
 import { app } from "./conf";
 
 type TCollectionReference_TemplateProcess =
@@ -20,6 +25,7 @@ type TCollectionReference_ProcessExecution =
   CollectionReference<TProcessExecutionDTO>;
 type TCollectionReference_HistoryItem = CollectionReference<THistoryItem>;
 
+type TDocumentReference_TemplateMeta = DocumentReference<TTemplateMeta>;
 type TDocumentReference_TemplateProcess = DocumentReference<TTemplateProcess>;
 type TDocumentReference_ProcessExecution =
   DocumentReference<TProcessExecutionDTO>;
@@ -48,6 +54,8 @@ const collections = {
 };
 
 const docs = {
+  templateMeta: (templateId: string) =>
+    doc(db, "TemplateProcesses", templateId) as TDocumentReference_TemplateMeta,
   execution: (executionId: string) =>
     doc(db, "Exec", executionId) as TDocumentReference_ProcessExecution,
 };

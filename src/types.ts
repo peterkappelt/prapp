@@ -26,6 +26,12 @@ const TemplateProcess = z.object({
 });
 type TTemplateProcess = z.infer<typeof TemplateProcess>;
 
+const TemplateMeta = z.object({
+  createdBy: z.string(),
+  createdAt: z.custom<Timestamp>(),
+});
+type TTemplateMeta = z.infer<typeof TemplateMeta>;
+
 const History_StepStarted = z.object({
   type: z.literal("step_started"),
   step: z.string().uuid(),
@@ -81,6 +87,7 @@ export {
   ProcessExecutionDTO,
   ProcessExecution,
   HistoryItem,
+  TemplateMeta,
 };
 export type {
   TTemplateProcess,
@@ -91,4 +98,5 @@ export type {
   THistoryItem,
   TExecutionSection,
   TExecutionStep,
+  TTemplateMeta,
 };
