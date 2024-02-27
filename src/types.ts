@@ -52,6 +52,7 @@ type THistoryItem = z.infer<typeof HistoryItem>;
 
 const ProcessExecutionDTO = z.object({
   initiatedAt: z.custom<Timestamp>(),
+  initiatedBy: z.string(),
   processRef: z.custom<TDocumentReference_TemplateProcess>(),
 });
 type TProcessExecutionDTO = z.infer<typeof ProcessExecutionDTO>;

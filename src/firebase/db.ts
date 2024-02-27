@@ -18,6 +18,7 @@ import {
   TTemplateProcess,
 } from "../types";
 import { app } from "./conf";
+import { auth } from "./auth";
 
 type TCollectionReference_TemplateMeta = CollectionReference<TTemplateMeta>;
 type TCollectionReference_TemplateProcess =
@@ -97,6 +98,7 @@ const actions = {
     return await addDoc(collections.execution, {
       processRef,
       initiatedAt: serverTimestamp(),
+      initiatedBy: auth.currentUser?.uid,
     });
   },
 };
