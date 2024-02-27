@@ -1,8 +1,10 @@
+import { notifications } from "@mantine/notifications";
 import {
   GoogleAuthProvider,
   User,
   getAuth,
   onAuthStateChanged,
+  signOut,
 } from "firebase/auth";
 import React, { useContext, useEffect, useState } from "react";
 import { Redirect } from "wouter";
@@ -16,12 +18,13 @@ const providers = {
 
 interface AuthContext {
   user: User | undefined;
+  signOut: () => void;
 }
 
 const AuthCtx = React.createContext<AuthContext | undefined>(undefined);
 
 const AuthContext = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User>();
+  const [user, setUser] = useState<User | undefined>(auth.currentUser || undefined);
 
   useEffect(() => {
     let active = true;
@@ -34,9 +37,20 @@ const AuthContext = ({ children }: { children: React.ReactNode }) => {
       unsubscribe();
     };
   }, []);
-  
+
   return (
-    <AuthCtx.Provider value={{ user: user || auth.currentUser || undefined }}>
+    <AuthCtx.Provider
+      value={{
+        user: user,
+        signOut: () =>
+          signOut(auth).then(() => {
+            notifications.show({
+              message: "Successfully signed out",
+              color: "green",
+            });
+          }),
+      }}
+    >
       {children}
     </AuthCtx.Provider>
   );

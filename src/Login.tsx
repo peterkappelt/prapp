@@ -1,6 +1,6 @@
 import { Button } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { signInWithPopup, signOut } from "firebase/auth";
+import { signInWithPopup } from "firebase/auth";
 import { auth, providers } from "./firebase/auth";
 
 export const LoginPage = () => {
@@ -25,15 +25,6 @@ export const LoginPage = () => {
         }}
       >
         Login with Google
-      </Button>
-      <Button
-        onClick={() => {
-          signOut(auth).then(() => {
-            notifications.show({ message: "Signed out", color: "green" });
-          });
-        }}
-      >
-        Log out
       </Button>
     </div>
   );
