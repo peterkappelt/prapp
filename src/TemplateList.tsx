@@ -1,4 +1,6 @@
 import {
+  ActionIcon,
+  Blockquote,
   Box,
   Button,
   Card,
@@ -10,7 +12,13 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconEye,
+  IconInfoCircle,
+  IconPlus,
+} from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import { useLocation } from "wouter";
@@ -23,9 +31,60 @@ import {
   actions,
   queries,
 } from "./firebase/db";
-import { TTemplateMeta, TTemplateProcess } from "./types";
+import { TProcessExecutionDTO, TTemplateMeta, TTemplateProcess } from "./types";
 
 type TTemplateMetas = Record<string, TTemplateMeta>;
+
+export const ProcessExecutions = ({ id }: { id: string }) => {
+  const [, setLocation] = useLocation();
+  const [executions, setExecutions] =
+    useState<[string, TProcessExecutionDTO][]>();
+
+  useEffect(() => {
+    let active = true;
+
+    const do_work = async () => {
+      const docs = await queries.getExecutionsForProcess(id);
+      if (!active) return;
+      setExecutions(docs);
+    };
+    do_work();
+
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  return (
+    <Card withBorder shadow="none">
+      <LoadingOverlay visible={!executions} />
+      {!executions && <Skeleton>Loading...</Skeleton>}
+      {executions && !executions.length && (
+        <Blockquote color="blue" icon={<IconInfoCircle />}>
+          There were no executions of this process so far.
+        </Blockquote>
+      )}
+      {executions && executions.length
+        ? executions.map(([e_id, e]) => (
+            <Card.Section inheritPadding withBorder py="sm" key={e_id}>
+              <Group justify="space-between">
+                Initiated:&nbsp;{e.initiatedAt.toDate().toLocaleString()}
+                <ActionIcon
+                  variant="light"
+                  onClick={() => setLocation(`/execution/${e_id}`)}
+                >
+                  <IconEye
+                    style={{ width: "70%", height: "70%" }}
+                    stroke={1.5}
+                  />
+                </ActionIcon>
+              </Group>
+            </Card.Section>
+          ))
+        : undefined}
+    </Card>
+  );
+};
 
 export const TemplateProcessCard = ({
   id,
@@ -35,6 +94,7 @@ export const TemplateProcessCard = ({
   meta: TTemplateMeta;
 }) => {
   const [, setLocation] = useLocation();
+  const [isExpanded, setIsExpanded] = useState(false);
   const [process, setProcess] = useState<TTemplateProcess>();
   const [docRef, setDocRef] = useState<TDocumentReference_TemplateProcess>();
 
@@ -82,6 +142,37 @@ export const TemplateProcessCard = ({
         <Text size="sm" c="dimmed">
           Created: {meta.createdAt.toDate().toLocaleString()}
         </Text>
+        {!isExpanded && (
+          <Card.Section inheritPadding>
+            <ActionIcon
+              variant="transparent"
+              color="gray"
+              w="100%"
+              onClick={() => setIsExpanded(true)}
+            >
+              <IconChevronDown
+                style={{ width: "70%", height: "70%" }}
+                stroke={1.5}
+              />
+            </ActionIcon>
+          </Card.Section>
+        )}
+        {isExpanded && (
+          <Card.Section inheritPadding pb="md">
+            <ActionIcon
+              variant="transparent"
+              color="gray"
+              w="100%"
+              onClick={() => setIsExpanded(false)}
+            >
+              <IconChevronUp
+                style={{ width: "70%", height: "70%" }}
+                stroke={1.5}
+              />
+            </ActionIcon>
+            <ProcessExecutions id={id} />
+          </Card.Section>
+        )}
       </Card>
     </Box>
   );

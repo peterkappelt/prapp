@@ -10,6 +10,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  where,
 } from "firebase/firestore";
 import {
   THistoryItem,
@@ -79,6 +80,22 @@ const queries = {
     const res = await getDocs(query(collections.templateProcesses()));
     return res;
   },
+  getExecutionsForProcess: async (
+    templateId: string
+  ): Promise<[string, TProcessExecutionDTO][]> => {
+    const templateRevs = await getDocs(
+      query(collections.templateProcessRevisions(templateId))
+    );
+    const templateRevRefs = templateRevs.docs.map((d) => d.ref);
+    const res = await getDocs(
+      query(
+        collections.execution,
+        where("processRef", "in", templateRevRefs),
+        orderBy("initiatedAt", "desc")
+      )
+    );
+    return res.docs.map((d) => [d.id, d.data()]);
+  },
 };
 
 const actions = {
@@ -110,7 +127,7 @@ const actions = {
       type: as,
       step: stepId,
       at: serverTimestamp(),
-      by: auth.currentUser?.uid
+      by: auth.currentUser?.uid,
     });
   },
 };
