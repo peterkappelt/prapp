@@ -1,12 +1,14 @@
-import { Button } from "@mantine/core";
+import { Button, Center } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { IconBrandGoogleFilled } from "@tabler/icons-react";
 import { signInWithPopup } from "firebase/auth";
 import { auth, providers } from "./firebase/auth";
 
 export const LoginPage = () => {
   return (
-    <div>
+    <Center>
       <Button
+        leftSection={<IconBrandGoogleFilled />}
         onClick={() => {
           signInWithPopup(auth, providers.google)
             .then(() => {
@@ -26,6 +28,6 @@ export const LoginPage = () => {
       >
         Login with Google
       </Button>
-    </div>
+    </Center>
   );
 };
