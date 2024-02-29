@@ -13,11 +13,9 @@ class MetaSerializer(serializers.ModelSerializer):
 
 
 class StepSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(source="step_id", read_only=True)
-
     class Meta:
         model = Step
-        fields = ("id", "title", "type", "description")
+        fields = ("title", "type", "description")
 
 
 class ProcessSerializer(serializers.ModelSerializer):

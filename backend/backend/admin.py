@@ -7,7 +7,6 @@ admin.site.register(Step)
 
 class StepInline(admin.TabularInline):
     model = Step
-    readonly_fields = ("step_id",)
     extra = 1
 
 

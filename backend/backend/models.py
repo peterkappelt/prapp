@@ -28,8 +28,6 @@ class Step(models.Model):
         )
         Step = "ST", "Step"
 
-    step_id = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
-
     title = models.CharField(max_length=200)
     type = models.CharField(max_length=2, choices=Type.choices)
     description = models.TextField(blank=True)
