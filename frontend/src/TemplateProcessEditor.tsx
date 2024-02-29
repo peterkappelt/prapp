@@ -1,54 +1,53 @@
-import { TTemplateProcess, TemplateProcess } from "@/types";
 import { ProcessView } from "@components/Process/ProcessView";
-import {
-  ActionIcon,
-  Box,
-  Group,
-  LoadingOverlay,
-  Stack
-} from "@mantine/core";
+import { ActionIcon, Box, Group, LoadingOverlay, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconDeviceFloppy } from "@tabler/icons-react";
-import {
-  DocumentData,
-  DocumentReference,
-  getDoc,
-  serverTimestamp,
-  setDoc,
-} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import { useLocation } from "wouter";
+import { useApi } from "./Api";
 import { StartExecutionButton } from "./components/Process/ActionButtons";
-import { useAuth } from "./firebase/auth";
-import { actions, docs, queries } from "./firebase/db";
+import { Process, Process_Empty, TProcess } from "./newtypes";
 
 function TemplateProcessEditor({ templateId }: { templateId: string }) {
   const [, setLocation] = useLocation();
+  const api = useApi();
   const [loading, setLoading] = useState(true);
-  const [process, setProcess] = useImmer(TemplateProcess.parse({}));
-  const [docRef, setDocRef] =
-    useState<DocumentReference<TTemplateProcess, DocumentData>>();
-  const { user } = useAuth();
+  const [process, setProcess] = useImmer<TProcess>(Process_Empty);
 
   useEffect(() => {
     let active = true;
-    const do_query = async () => {
-      const res = await queries.getLatestTemplateProcessVersion(templateId);
-      if (!active) return;
-      if (!res) {
-        setLoading(false);
-        return;
-      }
-      setProcess(res.data());
-      setDocRef(res.ref);
+
+    if (templateId == "new") {
       setLoading(false);
+      return;
+    }
+
+    const do_query = async () => {
+      try {
+        const res = await api.processes.processesRetrieve({
+          revision: templateId,
+        });
+        if (!active) return;
+        setProcess(Process.parse(res));
+        setLoading(false);
+      } catch (err) {
+        notifications.show({
+          title: "Failed loading process",
+          message:
+            "An error occured. This process might not exist or you don't have permission. " +
+            String(err),
+          color: "red",
+        });
+      }
     };
     do_query();
     return () => {
       active = false;
     };
-  }, [templateId, setProcess]);
+  }, [templateId, setProcess, api]);
+
+  console.log(process.meta);
 
   return (
     <Box pos="relative">
@@ -57,37 +56,40 @@ function TemplateProcessEditor({ templateId }: { templateId: string }) {
         <Group justify="flex-end">
           <StartExecutionButton
             tooltip={
-              !docRef
+              !process.meta
                 ? "You must save the process definition before starting an execution"
                 : undefined
             }
-            disabled={!docRef}
+            disabled={!process.meta}
             onClick={async () => {
-              if (!docRef) {
-                notifications.show({
-                  message: "Process needs to be saved first",
-                  color: "red",
-                });
-                return;
-              }
-              const res = await actions.startProcessExecution(docRef);
-              setLocation(`/execution/${res.id}`);
+              // if (!docRef) {
+              //   notifications.show({
+              //     message: "Process needs to be saved first",
+              //     color: "red",
+              //   });
+              //   return;
+              // }
+              // const res = await actions.startProcessExecution(docRef);
+              // setLocation(`/execution/${res.id}`);
             }}
           />
           <ActionIcon
             size="lg"
             onClick={async () => {
-              const meta = await getDoc(docs.templateMeta(templateId));
-              if (!meta.exists())
-                await setDoc(docs.templateMeta(templateId), {
-                  createdAt: serverTimestamp(),
-                  createdBy: user?.uid,
+              if (process.meta) {
+                await api.processes.processesUpdate({
+                  revision: process.meta.id,
+                  processRequest: process,
                 });
-
-              const res = await actions.storeProcessRevision(templateId, process);
-              setDocRef(res);
+              } else {
+                const res = await api.processes.processesCreate({
+                  processRequest: process,
+                });
+                setProcess(Process.parse(res));
+                setLocation(`/template/${res.meta.id}`, { replace: true });
+              }
               notifications.show({
-                message: "Process changes saved successfully",
+                message: "Process saved successfully",
                 color: "green",
               });
             }}

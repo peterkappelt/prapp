@@ -1,7 +1,5 @@
-import {
-  TExecutionStep,
-  TTemplateStep
-} from "@/types";
+import { TStep } from "@/newtypes";
+import { TExecutionStep } from "@/types";
 import {
   ActionIcon,
   Card,
@@ -28,7 +26,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useCallback, useMemo } from "react";
 
 interface ProcessStepProps {
-  step: TTemplateStep;
+  step: TStep;
   title?: React.ReactNode;
   cardProps?: CardProps;
   titleProps?: CardSectionProps;
@@ -36,7 +34,7 @@ interface ProcessStepProps {
 }
 
 interface ProcessStepEditableProps extends ProcessStepProps {
-  mutator: (func: (step: TTemplateStep) => undefined) => void;
+  mutator: (func: (step: TStep) => undefined) => void;
   onDelete: () => void;
 }
 
@@ -115,7 +113,7 @@ function ProcessStepExecution({
               )}
             </Group>
           </Grid.Col>
-          {(step.state) && (
+          {step.state && (
             <Grid.Col span={12}>
               <Stepper
                 size={isMobile ? "xs" : "sm"}
@@ -126,8 +124,7 @@ function ProcessStepExecution({
                   label="Started"
                   completedIcon={<IconPlayerPlay />}
                   description={
-                    step.startedAt &&
-                    step.startedAt.toDate().toLocaleString()
+                    step.startedAt && step.startedAt.toDate().toLocaleString()
                   }
                 />
                 <Stepper.Step
@@ -137,8 +134,7 @@ function ProcessStepExecution({
                 <Stepper.Step
                   label="Done"
                   description={
-                    step.doneAt &&
-                    step.doneAt.toDate().toLocaleString()
+                    step.doneAt && step.doneAt.toDate().toLocaleString()
                   }
                   mih={0}
                 />

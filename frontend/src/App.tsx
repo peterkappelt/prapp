@@ -1,26 +1,17 @@
-import {
-  AppShell,
-  Burger,
-  Grid,
-  Menu,
-  NavLink,
-  Title,
-  rem,
-} from "@mantine/core";
+import { AppShell, Burger, Grid, NavLink, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconList, IconLogout } from "@tabler/icons-react";
+import { IconList } from "@tabler/icons-react";
 import { Route, Switch, useLocation } from "wouter";
+import { useApi } from "./Api";
 import { LoginPage } from "./Login";
 import { ProcessExecutionView } from "./ProcessExecutionView";
 import { TemplateList } from "./TemplateList";
 import TemplateProcessEditor from "./TemplateProcessEditor";
-import { UserButton } from "./components/UserButton";
-import { useAuth } from "./firebase/auth";
 
 function App() {
   const [, setLocation] = useLocation();
   const [opened, { toggle }] = useDisclosure();
-  const { user, signOut } = useAuth();
+  const { authenticated } = useApi();
 
   return (
     <AppShell
@@ -51,7 +42,7 @@ function App() {
           <Grid.Col span="auto">
             <Title order={1}>PrApp</Title>
           </Grid.Col>
-          {user && (
+          {/* {user && (
             <Grid.Col span="content">
               <Menu withArrow>
                 <Menu.Target>
@@ -73,15 +64,15 @@ function App() {
                 </Menu.Dropdown>
               </Menu>
             </Grid.Col>
-          )}
+          )} */}
         </Grid>
       </AppShell.Header>
-      {!user && (
+      {!authenticated && (
         <AppShell.Main>
           <LoginPage />
         </AppShell.Main>
       )}
-      {user && (
+      {authenticated && (
         <>
           <AppShell.Navbar p="md">
             <NavLink

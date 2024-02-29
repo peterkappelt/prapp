@@ -1,9 +1,10 @@
 import {
-  TExecutionSection,
-  TTemplateSection,
-  TTemplateStep,
-  TemplateStep,
-} from "@/types";
+  Step_Empty,
+  TProcess_StepItem,
+  TSection,
+  TStep
+} from "@/newtypes";
+import { TExecutionSection } from "@/types";
 import {
   ActionIcon,
   Button,
@@ -20,15 +21,16 @@ import React, { useCallback } from "react";
 import { ProcessStep } from "./ProcessStep";
 
 interface ProcessSectionProps {
-  section: TTemplateSection;
+  section: TSection;
+  steps: TStep[];
   title?: React.ReactNode;
   timelineItemProps?: TimelineItemProps;
-  children?: (step: TTemplateStep, step_idx: number) => React.ReactNode;
+  children?: (step: TStep, step_idx: number) => React.ReactNode;
   extraChildren?: React.ReactNode | React.ReactNode[];
 }
 
 interface ProcessSectionEditableProps extends ProcessSectionProps {
-  mutator: (func: (section: TTemplateSection) => undefined) => void;
+  mutator: (func: (steps: TProcess_StepItem[]) => undefined) => void;
   onSectionAdd: () => void;
   onDelete: () => void;
 }
@@ -78,10 +80,10 @@ function ProcessSectionEditable({
   const handleTitleChange = useCallback(
     (title: string) => {
       mutator((draft) => {
-        draft.title = title;
+        draft.find((s) => s.id == props.section.id)!.title = title;
       });
     },
-    [mutator]
+    [mutator, props.section.id]
   );
 
   return (
@@ -109,24 +111,32 @@ function ProcessSectionEditable({
           onSectionAdd={onSectionAdd}
           onStepAdd={() =>
             mutator((draft) => {
-              draft.steps.push(TemplateStep.parse({}));
+              let idx = draft.findIndex((s) => s.id == props.section.id);
+              do {
+                idx++;
+                if (idx == draft.length) break;
+                if (draft[idx].type == "SE") break;
+              } while (idx < draft.length);
+              draft.splice(idx, 0, Step_Empty());
             })
           }
         />
       }
       {...props}
     >
-      {(step, step_idx) => (
+      {(step) => (
         <ProcessStep.Editable
           step={step}
           mutator={(update) =>
             mutator((draft) => {
-              update(draft.steps[step_idx]);
+              update(draft.find((s) => s.id == step.id) as TStep);
             })
           }
           onDelete={() =>
             mutator((draft) => {
-              draft.steps.splice(step_idx, 1);
+              const idx = draft.findIndex((s) => s.id == step.id);
+              if (idx == -1) return;
+              draft.splice(idx, 1);
             })
           }
         />
@@ -137,6 +147,7 @@ function ProcessSectionEditable({
 
 function ProcessSection({
   section,
+  steps,
   timelineItemProps,
   title,
   children,
@@ -148,7 +159,7 @@ function ProcessSection({
       {...timelineItemProps}
     >
       <Stack gap="sm" mt="md">
-        {section.steps.map((step, step_idx) =>
+        {steps.map((step, step_idx) =>
           children ? (
             <React.Fragment key={step.id}>
               {children(step, step_idx)}
