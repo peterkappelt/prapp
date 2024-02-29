@@ -1,157 +1,108 @@
 import { Box, LoadingOverlay, Stack } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
-import { getDoc, onSnapshot } from "firebase/firestore";
-import { useCallback, useEffect, useMemo } from "react";
-import { useImmer } from "use-immer";
+import { useCallback, useEffect, useState } from "react";
+import { useApi } from "./Api";
 import { ProcessView } from "./components/Process/ProcessView";
-import { actions, collections, docs } from "./firebase/db";
-import {
-  HistoryItem,
-  ProcessExecutionDTO,
-  TExecutionSection,
-  TExecutionStep,
-  THistoryItem,
-  TProcessExecution,
-  TProcessExecutionDTO,
-  TTemplateProcess,
-} from "./types";
-
-/**
- * Merge a template process with an
- * execution metadata object and the history
- * to a TProcessExecution object, which is
- * a TTemplateProcess enriched with execution
- * information
- */
-const mergeProcessExecution = (
-  template?: TTemplateProcess,
-  executionMeta?: TProcessExecutionDTO,
-  history?: THistoryItem[]
-): TProcessExecution | undefined => {
-  if (!template || !executionMeta || !history) return;
-
-  const sections = template.sections.map<TExecutionSection>((sec) => {
-    const steps = sec.steps.map<TExecutionStep>((step) => {
-      // find the startedAt and doneAt timestamps in the history
-      // TODO this assumes that history is sorted by at-time
-      const startedAt = history.find(
-        (h) => h.type == "step_started" && h.step == step.id
-      )?.at;
-      const doneAt = history.find(
-        (h) => h.type == "step_done" && h.step == step.id
-      )?.at;
-      return {
-        ...step,
-        doneAt,
-        startedAt,
-        // it is surely done if there is a timestamp for doneAt
-        state: doneAt ? "done" : undefined,
-      };
-    });
-
-    return {
-      ...sec,
-      steps,
-      // the section is surely done if each of its steps is done
-      state: steps.every((s) => s.state == "done") ? "done" : undefined,
-    };
-  });
-
-  //find the first step/ section that is not done and mark as active
-  const activeSec = sections.find((s) => s.state != "done");
-  if (activeSec) {
-    activeSec.state = "active";
-    const activeStep = activeSec.steps.find((s) => s.state != "done");
-    if (activeStep) activeStep.state = "active";
-  }
-
-  return {
-    ...template,
-    ...executionMeta,
-    sections,
-  };
-};
+import { ProcessExecution, TProcessExecution } from "./newtypes";
+import { } from "./types";
 
 export function ProcessExecutionView({ executionId }: { executionId: string }) {
-  const [[executionMeta, history], setExecution] = useImmer<
-    [TProcessExecutionDTO, THistoryItem[]] | []
-  >([]);
-  const [template, setTemplate] = useImmer<TTemplateProcess | undefined>(
-    undefined
+  const api = useApi();
+  const [execution, setExecution] = useState<TProcessExecution>();
+
+  const updateExecution = useCallback(
+    (exec: TProcessExecution) => {
+      /**
+       * TODO I feel like this should maybe be done in backend
+       */
+      
+      //mark all the steps that are done
+      exec.steps.forEach((s) => {
+        if (s.type != "ST") return;
+        if (s.startedAt && s.doneAt) s.state = "done";
+      });
+
+      // find the first step that is not done and mark it as active
+      const activeStep = exec.steps.find(
+        (s) => s.type == "ST" && s.state != "done"
+      );
+      if (activeStep) activeStep.state = "active";
+
+      let isDone = true,
+        hasActive = false;
+      for (let i = exec.steps.length - 1; i >= 0; i--) {
+        const step = exec.steps[i];
+        if (step.type == "SE") {
+          if (isDone) step.state = "done";
+          if (hasActive) step.state = "active";
+          isDone = true;
+          hasActive = false;
+        } else {
+          if (step.state != "done") isDone = false;
+          if (step.state == "active") hasActive = true;
+        }
+      }
+
+      setExecution(exec);
+    },
+    [setExecution]
   );
 
   useEffect(() => {
     let active = true;
-    const unsubscribeMeta = onSnapshot(docs.execution(executionId), (doc) => {
-      if (!active) return;
-      setExecution((draft) => {
-        draft[0] = ProcessExecutionDTO.parse(doc.data());
-      });
-    });
-    const unsubscribeHistory = onSnapshot(
-      collections.executionHistory(executionId),
-      (res) => {
-        if (!active) return;
-        setExecution((draft) => {
-          draft[1] = res.docs.map((d) => HistoryItem.parse(d.data()));
-        });
-      }
-    );
-    return () => {
-      active = false;
-      unsubscribeMeta();
-      unsubscribeHistory();
-    };
-  }, [executionId, setExecution]);
-
-  useEffect(() => {
-    if (!executionMeta?.processRef) return;
-    let active = true;
 
     const do_work = async () => {
-      const res = await getDoc(executionMeta.processRef);
-
+      const res = await api.executions.executionsRetrieve({
+        id: executionId,
+      });
       if (!active) return;
-      const data = res.data();
-      if (!data) {
-        notifications.show({
-          message: "Failed to fetch process information!",
-          color: "red",
-        });
-        return;
-      }
-      setTemplate(data);
+      updateExecution(ProcessExecution.parse(res.process));
     };
     do_work();
 
     return () => {
       active = false;
     };
-  }, [executionMeta?.processRef.path, setTemplate]);
-
-  const process = useMemo(
-    () => mergeProcessExecution(template, executionMeta, history),
-    [template, executionMeta, history]
-  );
+  }, [executionId, setExecution]);
 
   const onStepDone = useCallback(
-    (step: string) => actions.historyMarkStepAs(executionId, step, "step_done"),
-    [executionId]
+    async (step: string) => {
+      const stepIdx = execution?.steps.findIndex((s) => s.id == step);
+      if (!stepIdx) return;
+      const res = await api.executions.executionsMarkStep({
+        executionMarkStepRequest: {
+          markAs: "StepDone",
+          stepIdx,
+        },
+        id: executionId,
+      });
+      updateExecution(ProcessExecution.parse(res.process));
+    },
+    [executionId, execution?.steps, api.executions, updateExecution]
   );
 
   const onStepStart = useCallback(
-    (step: string) =>
-      actions.historyMarkStepAs(executionId, step, "step_started"),
-    [executionId]
+    async (step: string) => {
+      const stepIdx = execution?.steps.findIndex((s) => s.id == step);
+      if (!stepIdx) return;
+      const res = await api.executions.executionsMarkStep({
+        executionMarkStepRequest: {
+          markAs: "StepStarted",
+          stepIdx,
+        },
+        id: executionId,
+      });
+      updateExecution(ProcessExecution.parse(res.process));
+    },
+    [executionId, execution?.steps, api.executions, updateExecution]
   );
 
   return (
     <Box pos="relative">
-      <LoadingOverlay visible={!process} />
+      <LoadingOverlay visible={!execution} />
       <Stack>
-        {process && (
+        {execution && (
           <ProcessView.Execution
-            process={process}
+            process={execution}
             onStepDone={onStepDone}
             onStepStart={onStepStart}
           />

@@ -2,9 +2,10 @@ import {
   Step_Empty,
   TProcess_StepItem,
   TSection,
-  TStep
+  TSectionExecution,
+  TStep,
+  TStepExecution,
 } from "@/newtypes";
-import { TExecutionSection } from "@/types";
 import {
   ActionIcon,
   Button,
@@ -20,12 +21,12 @@ import { IconPlus, IconTrash } from "@tabler/icons-react";
 import React, { useCallback } from "react";
 import { ProcessStep } from "./ProcessStep";
 
-interface ProcessSectionProps {
+interface ProcessSectionProps<T extends TStep = TStep> {
   section: TSection;
-  steps: TStep[];
+  steps: T[];
   title?: React.ReactNode;
   timelineItemProps?: TimelineItemProps;
-  children?: (step: TStep, step_idx: number) => React.ReactNode;
+  children?: (step: T, step_idx: number) => React.ReactNode;
   extraChildren?: React.ReactNode | React.ReactNode[];
 }
 
@@ -35,8 +36,9 @@ interface ProcessSectionEditableProps extends ProcessSectionProps {
   onDelete: () => void;
 }
 
-interface ProcessSectionExecutionProps extends ProcessSectionProps {
-  section: TExecutionSection;
+interface ProcessSectionExecutionProps
+  extends ProcessSectionProps<TStepExecution> {
+  section: TSectionExecution;
   onStepStart: (stepId: string) => void;
   onStepDone: (stepId: string) => void;
 }
@@ -145,14 +147,14 @@ function ProcessSectionEditable({
   );
 }
 
-function ProcessSection({
+function ProcessSection<T extends TStep>({
   section,
   steps,
   timelineItemProps,
   title,
   children,
   extraChildren,
-}: ProcessSectionProps) {
+}: ProcessSectionProps<T>) {
   return (
     <Timeline.Item
       title={title ?? <Title order={2}>{section.title}</Title>}

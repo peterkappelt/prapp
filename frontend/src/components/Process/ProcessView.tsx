@@ -1,14 +1,25 @@
-import { Section_Empty, TProcess, TSection, TStep } from "@/newtypes";
-import { TProcessExecution } from "@/types";
+import { Section_Empty, TProcess, TProcessExecution } from "@/newtypes";
 import { TextInput, Timeline, TimelineProps, Title } from "@mantine/core";
 import React, { useCallback, useMemo } from "react";
 import { ProcessSection } from "./ProcessSection";
+
+type TProcess_SectionType<T extends TProcess> = Extract<
+  T["steps"][0],
+  { type: "SE" }
+>;
+type TProcess_StepType<T extends TProcess> = Extract<
+  T["steps"][0],
+  { type: "ST" }
+>;
 
 interface ProcessViewProps<T extends TProcess = TProcess> {
   process: T;
   title?: React.ReactNode;
   timelineProps?: TimelineProps;
-  children?: (section: TSection, steps: TStep[]) => React.ReactNode;
+  children?: (
+    section: TProcess_SectionType<T>,
+    steps: TProcess_StepType<T>[]
+  ) => React.ReactNode;
 }
 
 interface ProcessViewEditableProps extends ProcessViewProps {
@@ -29,10 +40,11 @@ function ProcessViewExecution({
 }: ProcessViewExecutionProps) {
   return (
     <ProcessView process={process} {...props}>
-      {(sec) => (
+      {(sec, steps) => (
         <ProcessSection.Execution
           key={sec.id}
           section={sec}
+          steps={steps}
           onStepDone={onStepDone}
           onStepStart={onStepStart}
         />
@@ -94,14 +106,14 @@ function ProcessViewEditable({ mutator, ...props }: ProcessViewEditableProps) {
   );
 }
 
-type SplitSteps = [TSection, TStep[]][];
-
 function ProcessView<T extends TProcess>({
   process,
   timelineProps,
   title,
   children,
 }: ProcessViewProps<T>) {
+  type SplitSteps = [TProcess_SectionType<T>, TProcess_StepType<T>[]][];
+
   const structured = useMemo<SplitSteps>(() => {
     const steps = process.steps;
     const res: SplitSteps = [];
@@ -109,17 +121,19 @@ function ProcessView<T extends TProcess>({
     if (steps.length == 0) return [];
     if (steps[0].type != "SE") throw new Error("First step must be section");
 
-    let currentSec: TSection = steps[0];
-    let currentSteps: TStep[] = [];
+    // TODO those explicit as-castings should not be necessary and I don't know why they are
+    let currentSec: TProcess_SectionType<T> =
+      steps[0] as TProcess_SectionType<T>;
+    let currentSteps: TProcess_StepType<T>[] = [];
 
     for (let i = 1; i < steps.length; i++) {
       const step = steps[i];
       if (step.type == "SE") {
         res.push([currentSec, currentSteps]);
-        currentSec = step;
+        currentSec = step as TProcess_SectionType<T>;
         currentSteps = [];
       } else {
-        currentSteps.push(step);
+        currentSteps.push(step as TProcess_StepType<T>);
       }
     }
     res.push([currentSec, currentSteps]);

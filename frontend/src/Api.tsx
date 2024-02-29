@@ -1,12 +1,13 @@
 import { ProcessesApi } from "@/api/apis/ProcessesApi";
 import React, { useContext } from "react";
 import { useImmer } from "use-immer";
-import { Configuration, TokenApi } from "./api";
+import { Configuration, ExecutionsApi, TokenApi } from "./api";
 
 interface TApiContext {
   authenticated: boolean;
   token: TokenApi;
   processes: ProcessesApi;
+  executions: ExecutionsApi;
 }
 
 interface TTokens {
@@ -38,6 +39,7 @@ const ApiContext = ({ children }: { children: React.ReactNode }) => {
           });
         }),
         processes: new ProcessesApi(conf),
+        executions: new ExecutionsApi(conf),
       }}
     >
       {children}

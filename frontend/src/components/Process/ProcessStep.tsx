@@ -1,5 +1,4 @@
-import { TStep } from "@/newtypes";
-import { TExecutionStep } from "@/types";
+import { TStep, TStepExecution } from "@/newtypes";
 import {
   ActionIcon,
   Card,
@@ -39,7 +38,7 @@ interface ProcessStepEditableProps extends ProcessStepProps {
 }
 
 interface ProcessStepExecutionProps extends ProcessStepProps {
-  step: TExecutionStep;
+  step: TStepExecution;
   isNext?: boolean;
   onStart: () => void;
   onDone: () => void;
@@ -124,7 +123,7 @@ function ProcessStepExecution({
                   label="Started"
                   completedIcon={<IconPlayerPlay />}
                   description={
-                    step.startedAt && step.startedAt.toDate().toLocaleString()
+                    step.startedAt && step.startedAt.toLocaleString()
                   }
                 />
                 <Stepper.Step
@@ -133,9 +132,7 @@ function ProcessStepExecution({
                 />
                 <Stepper.Step
                   label="Done"
-                  description={
-                    step.doneAt && step.doneAt.toDate().toLocaleString()
-                  }
+                  description={step.doneAt && step.doneAt.toLocaleString()}
                   mih={0}
                 />
               </Stepper>
