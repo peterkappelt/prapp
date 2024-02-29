@@ -32,6 +32,7 @@ from rest_framework_simplejwt.views import (
 
 apirouter = routers.DefaultRouter()
 apirouter.register(r"processes", views.ProcessViewSet, basename="process")
+apirouter.register(r"executions", views.ExecutionViewSet, basename="execution")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

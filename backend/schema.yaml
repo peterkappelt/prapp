@@ -3,12 +3,74 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /api/executions/{id}/:
+    get:
+      operationId: executions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this execution.
+        required: true
+      tags:
+      - executions
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Execution'
+          description: ''
+  /api/executions/{id}/mark_step/:
+    post:
+      operationId: executions_mark_step
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this execution.
+        required: true
+      tags:
+      - executions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecutionMarkStepRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExecutionMarkStepRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExecutionMarkStepRequest'
+        required: true
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Execution'
+          description: ''
   /api/processes/:
     get:
       operationId: processes_list
       tags:
       - processes
       security:
+      - basicAuth: []
+      - cookieAuth: []
       - jwtAuth: []
       responses:
         '200':
@@ -36,6 +98,8 @@ paths:
               $ref: '#/components/schemas/ProcessRequest'
         required: true
       security:
+      - basicAuth: []
+      - cookieAuth: []
       - jwtAuth: []
       responses:
         '201':
@@ -58,6 +122,8 @@ paths:
       tags:
       - processes
       security:
+      - basicAuth: []
+      - cookieAuth: []
       - jwtAuth: []
       responses:
         '200':
@@ -91,6 +157,8 @@ paths:
               $ref: '#/components/schemas/ProcessRequest'
         required: true
       security:
+      - basicAuth: []
+      - cookieAuth: []
       - jwtAuth: []
       responses:
         '200':
@@ -222,6 +290,8 @@ paths:
       tags:
       - schema
       security:
+      - basicAuth: []
+      - cookieAuth: []
       - jwtAuth: []
       - {}
       responses:
@@ -300,6 +370,39 @@ paths:
           description: ''
 components:
   schemas:
+    Execution:
+      type: object
+      properties:
+        initiatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        initiatedBy:
+          type: integer
+        process:
+          $ref: '#/components/schemas/ProcessExecution'
+      required:
+      - initiatedAt
+      - initiatedBy
+      - process
+    ExecutionMarkStepRequest:
+      type: object
+      properties:
+        mark_as:
+          $ref: '#/components/schemas/MarkAsEnum'
+        step_idx:
+          type: integer
+      required:
+      - mark_as
+      - step_idx
+    MarkAsEnum:
+      enum:
+      - StepStarted
+      - StepDone
+      type: string
+      description: |-
+        * `StepStarted` - StepStarted
+        * `StepDone` - StepDone
     Meta:
       type: object
       properties:
@@ -346,6 +449,34 @@ components:
       - revision
       - steps
       - title
+    ProcessExecution:
+      type: object
+      properties:
+        revision:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        meta:
+          allOf:
+          - $ref: '#/components/schemas/Meta'
+          readOnly: true
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/StepExecution'
+      required:
+      - createdAt
+      - meta
+      - revision
+      - steps
+      - title
     ProcessRequest:
       type: object
       properties:
@@ -371,6 +502,41 @@ components:
         description:
           type: string
       required:
+      - title
+      - type
+    StepExecution:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        description:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        startedBy:
+          type: integer
+          nullable: true
+          readOnly: true
+        doneAt:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        doneBy:
+          type: integer
+          nullable: true
+          readOnly: true
+      required:
+      - doneAt
+      - doneBy
+      - startedAt
+      - startedBy
       - title
       - type
     StepRequest:
@@ -439,6 +605,13 @@ components:
         * `SE` - Section
         * `ST` - Step
   securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
     jwtAuth:
       type: http
       scheme: bearer

@@ -33,3 +33,28 @@ class Step(models.Model):
     description = models.TextField(blank=True)
 
     process = models.ForeignKey(Process, on_delete=models.CASCADE, related_name="steps")
+
+
+class Execution(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    initiatedBy = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    initiatedAt = models.DateTimeField(auto_now_add=True)
+    process = models.ForeignKey(
+        Process, on_delete=models.CASCADE, related_name="executions"
+    )
+
+
+class HistoryItem(models.Model):
+    class Type(models.TextChoices):
+        StepDone = "StepDone"
+        StepStarted = "StepStarted"
+
+    execution = models.ForeignKey(
+        Execution, on_delete=models.CASCADE, related_name="history"
+    )
+
+    type = models.CharField(max_length=16, choices=Type.choices)
+    step = models.ForeignKey(Step, on_delete=models.CASCADE)
+    at = models.DateTimeField(auto_now_add=True)
+    by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
