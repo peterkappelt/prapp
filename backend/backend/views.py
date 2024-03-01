@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from .serializers import (
+    EmptySerializer,
     ExecutionMarkStepSerializer,
     ExecutionSerializer,
     MetaSerializer,
@@ -65,6 +66,17 @@ class ProcessViewSet(viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
+        return Response(serializer.data)
+
+    @extend_schema(
+        operation_id="processes_start_execution", responses={200: ExecutionSerializer}
+    )
+    @action(detail=True, methods=["POST"], serializer_class=EmptySerializer)
+    def start_execution(self, request, pk=None):
+        process = get_object_or_404(Meta.objects.all(), pk=pk).latest_revision
+
+        exec = process.executions.create(initiatedBy=request.user)
+        serializer = ExecutionSerializer(exec)
         return Response(serializer.data)
 
 

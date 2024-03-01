@@ -4,6 +4,10 @@ from .models import Execution, Meta, Process, Step
 from datetime import datetime
 
 
+class EmptySerializer(serializers.Serializer):
+    pass
+
+
 class MetaSerializer(serializers.ModelSerializer):
     createdBy = serializers.PrimaryKeyRelatedField(
         default=serializers.CurrentUserDefault(), read_only=True
@@ -98,7 +102,7 @@ class ExecutionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Execution
-        fields = ("initiatedAt", "initiatedBy", "process")
+        fields = ("id", "initiatedAt", "initiatedBy", "process")
 
 
 class ExecutionMarkStepSerializer(serializers.Serializer):

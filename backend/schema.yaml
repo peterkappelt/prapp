@@ -167,6 +167,30 @@ paths:
               schema:
                 $ref: '#/components/schemas/Process'
           description: ''
+  /api/processes/{revision}/start_execution/:
+    post:
+      operationId: processes_start_execution
+      parameters:
+      - in: path
+        name: revision
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this process.
+        required: true
+      tags:
+      - processes
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Execution'
+          description: ''
   /api/schema/:
     get:
       operationId: schema_retrieve
@@ -373,6 +397,10 @@ components:
     Execution:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
         initiatedAt:
           type: string
           format: date-time
@@ -382,6 +410,7 @@ components:
         process:
           $ref: '#/components/schemas/ProcessExecution'
       required:
+      - id
       - initiatedAt
       - initiatedBy
       - process
