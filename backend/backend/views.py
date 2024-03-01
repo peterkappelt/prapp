@@ -36,8 +36,7 @@ class ProcessViewSet(viewsets.GenericViewSet):
     )
     def retrieve(self, request, pk=None):
         meta = get_object_or_404(Meta.objects.all(), pk=pk)
-        process = meta.revisions.order_by("-createdAt").first()
-        serializer = ProcessSerializer(process)
+        serializer = ProcessSerializer(meta.latest_revision)
         return Response(serializer.data)
 
     def create(self, request):

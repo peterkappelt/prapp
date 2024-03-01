@@ -8,6 +8,10 @@ class Meta(models.Model):
     createdBy = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     createdAt = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def latest_revision(self):
+        return self.revisions.order_by("-createdAt").first()
+
 
 class Process(models.Model):
     revision = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
