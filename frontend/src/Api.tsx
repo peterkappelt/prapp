@@ -24,7 +24,7 @@ const ApiContext = ({ children }: { children: React.ReactNode }) => {
   });
 
   const conf = new Configuration({
-    basePath: "http://localhost:8000",
+    basePath: import.meta.env.VITE_BACKEND_URL,
     accessToken: () => {
       return tokens.accessToken ?? "";
     },
