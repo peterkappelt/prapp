@@ -23,33 +23,33 @@ import { useCallback, useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import { useLocation } from "wouter";
 import { useApi } from "./Api";
-import { Process } from "./api";
+import { ExecutionShallow, Process } from "./api";
 import {
   EditTemplateButton,
   StartExecutionButton,
 } from "./components/Process/ActionButtons";
-import { queries } from "./firebase/db";
-import { TProcessExecutionDTO } from "./types";
 
 export const ProcessExecutions = ({ id }: { id: string }) => {
+  const api = useApi();
   const [, setLocation] = useLocation();
-  const [executions, setExecutions] =
-    useState<[string, TProcessExecutionDTO][]>();
+  const [executions, setExecutions] = useState<ExecutionShallow[]>();
 
   useEffect(() => {
     let active = true;
 
     const do_work = async () => {
-      const docs = await queries.getExecutionsForProcess(id);
+      const res = await api.processes.processesExecutionsList({
+        revision: id,
+      });
       if (!active) return;
-      setExecutions(docs);
+      setExecutions(res);
     };
     do_work();
 
     return () => {
       active = false;
     };
-  }, [id]);
+  }, [id, api.processes]);
 
   return (
     <Card withBorder shadow="none">
@@ -61,13 +61,13 @@ export const ProcessExecutions = ({ id }: { id: string }) => {
         </Blockquote>
       )}
       {executions && executions.length
-        ? executions.map(([e_id, e]) => (
-            <Card.Section inheritPadding withBorder py="sm" key={e_id}>
+        ? executions.map((exec) => (
+            <Card.Section inheritPadding withBorder py="sm" key={exec.id}>
               <Group justify="space-between">
-                Initiated:&nbsp;{e.initiatedAt.toDate().toLocaleString()}
+                Initiated:&nbsp;{exec.initiatedAt.toLocaleString()}
                 <ActionIcon
                   variant="light"
-                  onClick={() => setLocation(`/execution/${e_id}`)}
+                  onClick={() => setLocation(`/execution/${exec.id}`)}
                 >
                   <IconEye
                     style={{ width: "70%", height: "70%" }}
