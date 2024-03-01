@@ -1,0 +1,27 @@
+name: Validate frontend
+on:
+  push:
+    paths:
+      - frontend/**
+      - .github/workflows/frontend.yaml
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: yarn install --dev
+      - name: Run linter
+        working-directory: ./frontend
+        run: yarn lint
