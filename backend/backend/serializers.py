@@ -105,6 +105,12 @@ class ExecutionSerializer(serializers.ModelSerializer):
         fields = ("id", "initiatedAt", "initiatedBy", "process")
 
 
+class ExecutionShallowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Execution
+        fields = ("id", "initiatedAt", "initiatedBy")
+
+
 class ExecutionMarkStepSerializer(serializers.Serializer):
     mark_as = serializers.ChoiceField(["StepStarted", "StepDone"])
     step_idx = serializers.IntegerField()

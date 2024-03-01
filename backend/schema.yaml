@@ -167,6 +167,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/Process'
           description: ''
+  /api/processes/{revision}/executions/:
+    get:
+      operationId: processes_executions_list
+      parameters:
+      - in: path
+        name: revision
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this process.
+        required: true
+      tags:
+      - processes
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExecutionShallow'
+          description: ''
   /api/processes/{revision}/start_execution/:
     post:
       operationId: processes_start_execution
@@ -424,6 +450,23 @@ components:
       required:
       - mark_as
       - step_idx
+    ExecutionShallow:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        initiatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        initiatedBy:
+          type: integer
+      required:
+      - id
+      - initiatedAt
+      - initiatedBy
     MarkAsEnum:
       enum:
       - StepStarted

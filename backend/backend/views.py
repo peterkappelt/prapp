@@ -6,7 +6,7 @@ from .serializers import (
     EmptySerializer,
     ExecutionMarkStepSerializer,
     ExecutionSerializer,
-    MetaSerializer,
+    ExecutionShallowSerializer,
     ProcessSerializer,
 )
 from .models import Execution, Meta, Process
@@ -77,6 +77,15 @@ class ProcessViewSet(viewsets.GenericViewSet):
 
         exec = process.executions.create(initiatedBy=request.user)
         serializer = ExecutionSerializer(exec)
+        return Response(serializer.data)
+
+    @extend_schema(responses={200: ExecutionShallowSerializer(many=True)})
+    @action(detail=True, methods=["GET"], serializer_class=EmptySerializer)
+    def executions(self, request, pk=None):
+        meta = get_object_or_404(Meta.objects.all(), pk=pk)
+        execs = Execution.objects.filter(process__meta=meta.id).order_by("-initiatedAt")
+
+        serializer = ExecutionShallowSerializer(execs, many=True)
         return Response(serializer.data)
 
 
