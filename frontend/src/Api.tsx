@@ -36,7 +36,7 @@ const ApiContext = ({ children }: { children: React.ReactNode }) => {
    * where res["code"] = "token_not_valid"
    */
   const invalidateTokenMiddleware = async (ctx: ResponseContext) => {
-    /** 
+    /**
      * TODO this is completely missing the refresh token logic
      * We should probably try to obtain a new access token here
      * and redo the request
@@ -86,4 +86,5 @@ const useApi = () => {
   return ctx;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { ApiContext, useApi };

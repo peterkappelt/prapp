@@ -61,7 +61,7 @@ export function ProcessExecutionView({ executionId }: { executionId: string }) {
     return () => {
       active = false;
     };
-  }, [executionId, setExecution]);
+  }, [executionId, setExecution, api.executions, updateExecution]);
 
   const onStepDone = useCallback(
     async (step: string) => {

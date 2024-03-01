@@ -28,4 +28,3 @@ const EditTemplateButton = ({ onClick }: { onClick: () => void }) => {
 };
 
 export { EditTemplateButton, StartExecutionButton };
-
