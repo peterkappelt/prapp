@@ -47,8 +47,6 @@ function TemplateProcessEditor({ templateId }: { templateId: string }) {
     };
   }, [templateId, setProcess, api]);
 
-  console.log(process.meta);
-
   return (
     <Box pos="relative">
       <LoadingOverlay visible={loading} />
