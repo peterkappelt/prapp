@@ -22,18 +22,14 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import { useLocation } from "wouter";
+import { useApi } from "./Api";
+import { Process } from "./api";
 import {
   EditTemplateButton,
   StartExecutionButton,
 } from "./components/Process/ActionButtons";
-import {
-  TDocumentReference_TemplateProcess,
-  actions,
-  queries,
-} from "./firebase/db";
-import { TProcessExecutionDTO, TTemplateMeta, TTemplateProcess } from "./types";
-
-type TTemplateMetas = Record<string, TTemplateMeta>;
+import { queries } from "./firebase/db";
+import { TProcessExecutionDTO } from "./types";
 
 export const ProcessExecutions = ({ id }: { id: string }) => {
   const [, setLocation] = useLocation();
@@ -86,61 +82,38 @@ export const ProcessExecutions = ({ id }: { id: string }) => {
   );
 };
 
-export const TemplateProcessCard = ({
-  id,
-  meta,
-}: {
-  id: string;
-  meta: TTemplateMeta;
-}) => {
+export const TemplateProcessCard = ({ process }: { process: Process }) => {
+  const api = useApi();
   const [, setLocation] = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [process, setProcess] = useState<TTemplateProcess>();
-  const [docRef, setDocRef] = useState<TDocumentReference_TemplateProcess>();
-
-  useEffect(() => {
-    let active = true;
-    const do_query = async () => {
-      const res = await queries.getLatestTemplateProcessVersion(id);
-      if (!active || !res) return;
-      setProcess(res.data());
-      setDocRef(res.ref);
-    };
-    do_query();
-    return () => {
-      active = false;
-    };
-  }, [id, setProcess]);
 
   const startExecution = useCallback(async () => {
-    if (!docRef) return;
-    const res = await actions.startProcessExecution(docRef);
+    const res = await api.processes.processesStartExecution({
+      revision: process.meta.id,
+    });
     setLocation(`/execution/${res.id}`);
-  }, [docRef, setLocation]);
+  }, [process.meta.id, api.processes, setLocation]);
 
   return (
     <Box pos="relative">
-      <LoadingOverlay visible={!process || !docRef} />
       <Card shadow="sm" withBorder>
         <Card.Section inheritPadding pt="sm">
           <Grid>
             <Grid.Col span="auto">
-              <Skeleton visible={!process}>
-                <Title order={2}>{process?.title || "loading"}</Title>
-              </Skeleton>
+              <Title order={2}>{process.title || "loading"}</Title>
             </Grid.Col>
             <Grid.Col span="content">
               <StartExecutionButton onClick={startExecution} />
             </Grid.Col>
             <Grid.Col span="content">
               <EditTemplateButton
-                onClick={() => setLocation(`/template/${id}`)}
+                onClick={() => setLocation(`/template/${process.meta.id}`)}
               />
             </Grid.Col>
           </Grid>
         </Card.Section>
         <Text size="sm" c="dimmed">
-          Created: {meta.createdAt.toDate().toLocaleString()}
+          Created: {process.meta.createdAt.toLocaleString()}
         </Text>
         {!isExpanded && (
           <Card.Section inheritPadding>
@@ -170,7 +143,7 @@ export const TemplateProcessCard = ({
                 stroke={1.5}
               />
             </ActionIcon>
-            <ProcessExecutions id={id} />
+            <ProcessExecutions id={process.meta.id} />
           </Card.Section>
         )}
       </Card>
@@ -179,28 +152,23 @@ export const TemplateProcessCard = ({
 };
 
 export const TemplateList = () => {
+  const api = useApi();
   const [, setLocation] = useLocation();
-  const [templates, setTemplates] = useImmer<TTemplateMetas>({});
+  const [processes, setProcesses] = useImmer<Process[]>([]);
 
   useEffect(() => {
     let active = true;
     const do_work = async () => {
-      const res = await queries.getAvailableTemplates();
+      const res = await api.processes.processesList();
       if (!active) return;
-
-      setTemplates(
-        res.docs.reduce<TTemplateMetas>((o, doc) => {
-          o[doc.id] = doc.data();
-          return o;
-        }, {})
-      );
+      setProcesses(res);
     };
     do_work();
 
     return () => {
       active = false;
     };
-  }, [setTemplates]);
+  }, [setProcesses, api.processes]);
 
   return (
     <Stack>
@@ -212,8 +180,8 @@ export const TemplateList = () => {
           New Process
         </Button>
       </Group>
-      {Object.entries(templates).map(([id, meta]) => (
-        <TemplateProcessCard key={id} id={id} meta={meta} />
+      {processes.map((process) => (
+        <TemplateProcessCard key={process.meta.id} process={process} />
       ))}
     </Stack>
   );
