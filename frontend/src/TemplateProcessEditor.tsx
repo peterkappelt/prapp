@@ -62,15 +62,17 @@ function TemplateProcessEditor({ templateId }: { templateId: string }) {
             }
             disabled={!process.meta}
             onClick={async () => {
-              // if (!docRef) {
-              //   notifications.show({
-              //     message: "Process needs to be saved first",
-              //     color: "red",
-              //   });
-              //   return;
-              // }
-              // const res = await actions.startProcessExecution(docRef);
-              // setLocation(`/execution/${res.id}`);
+              if (!process.meta?.id) {
+                notifications.show({
+                  message: "Process needs to be saved first",
+                  color: "red",
+                });
+                return;
+              }
+              const res = await api.processes.processesStartExecution({
+                revision: process.meta.id,
+              });
+              setLocation(`/execution/${res.id}`);
             }}
           />
           <ActionIcon
