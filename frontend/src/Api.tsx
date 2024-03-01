@@ -1,7 +1,7 @@
 import { ProcessesApi } from "@/api/apis/ProcessesApi";
 import React, { useContext } from "react";
 import { useImmer } from "use-immer";
-import { Configuration, ExecutionsApi, TokenApi } from "./api";
+import { Configuration, ExecutionsApi, ResponseContext, TokenApi } from "./api";
 
 interface TApiContext {
   authenticated: boolean;
@@ -18,7 +18,10 @@ interface TTokens {
 const Ctx = React.createContext<TApiContext | undefined>(undefined);
 
 const ApiContext = ({ children }: { children: React.ReactNode }) => {
-  const [tokens, setTokens] = useImmer<TTokens>({});
+  const [tokens, setTokens] = useImmer<TTokens>({
+    accessToken: localStorage.getItem("accessToken") ?? undefined,
+    refreshToken: localStorage.getItem("refreshToken") ?? undefined,
+  });
 
   const conf = new Configuration({
     basePath: "http://localhost:8000",
@@ -27,6 +30,26 @@ const ApiContext = ({ children }: { children: React.ReactNode }) => {
     },
   });
 
+  /**
+   * Invalidate the access token in case it is expired
+   * An expired token returns 401 status with JSON body,
+   * where res["code"] = "token_not_valid"
+   */
+  const invalidateTokenMiddleware = async (ctx: ResponseContext) => {
+    /** 
+     * TODO this is completely missing the refresh token logic
+     * We should probably try to obtain a new access token here
+     * and redo the request
+     */
+    if (ctx.response.status != 401) return;
+    const res = await ctx.response.json();
+    if (!("code" in res) || res["code"] != "token_not_valid") return;
+    localStorage.removeItem("accessToken");
+    setTokens((draft) => {
+      delete draft.accessToken;
+    });
+  };
+
   return (
     <Ctx.Provider
       value={{
@@ -34,12 +57,22 @@ const ApiContext = ({ children }: { children: React.ReactNode }) => {
         token: new TokenApi(conf).withPostMiddleware(async (ctx) => {
           const res = await ctx.response.json();
           setTokens((draft) => {
-            if ("access" in res) draft.accessToken = res["access"];
-            if ("refresh" in res) draft.refreshToken = res["refresh"];
+            if ("access" in res) {
+              draft.accessToken = res["access"];
+              localStorage.setItem("accessToken", res["access"]);
+            }
+            if ("refresh" in res) {
+              draft.refreshToken = res["refresh"];
+              localStorage.setItem("refreshToken", res["refresh"]);
+            }
           });
         }),
-        processes: new ProcessesApi(conf),
-        executions: new ExecutionsApi(conf),
+        processes: new ProcessesApi(conf).withPostMiddleware(
+          invalidateTokenMiddleware
+        ),
+        executions: new ExecutionsApi(conf).withPostMiddleware(
+          invalidateTokenMiddleware
+        ),
       }}
     >
       {children}
