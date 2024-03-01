@@ -2,11 +2,13 @@
 Base Django settings for prapp project.
 """
 
+import os
 from pathlib import Path
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Application definition
 

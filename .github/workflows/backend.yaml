@@ -1,0 +1,42 @@
+name: Validate backend and build containers
+on:
+  push:
+    paths:
+      - backend/**
+      - .github/workflows/backend.yaml
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+jobs:
+  validate-openapi-spec:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pipenv"
+      - name: Install Pipenv
+        working-directory: ./backend
+        run: pip install pipenv
+      - name: Install dependencies
+        working-directory: ./backend
+        run: pipenv install --dev
+      - name: Generate empty settings.py
+        working-directory: ./backend
+        run: echo -e "from prapp.settings_base import *\\nSECRET_KEY='ci'" > ./prapp/settings.py
+      - name: Generate OpenAPI spec from code
+        working-directory: ./backend
+        run: pipenv run python manage.py spectacular --file ${{ runner.temp }}/schema.yaml
+      - name: Store schema as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: ${{ runner.temp }}/schema.yaml
+      - name: Validate committed schema is up-to-date
+        working-directory: ./backend
+        run: |
+          cmp ./schema.yaml ${{ runner.temp }}/schema.yaml || (exit 1)
