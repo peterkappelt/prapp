@@ -2,7 +2,7 @@ import { Box, LoadingOverlay, Stack } from "@mantine/core";
 import { useCallback, useEffect, useState } from "react";
 import { useApi } from "./Api";
 import { ProcessView } from "./components/Process/ProcessView";
-import { ProcessExecution, TProcessExecution } from "./newtypes";
+import { ProcessExecution, TProcessExecution } from "./types";
 
 export function ProcessExecutionView({ executionId }: { executionId: string }) {
   const api = useApi();
@@ -13,7 +13,7 @@ export function ProcessExecutionView({ executionId }: { executionId: string }) {
       /**
        * TODO I feel like this should maybe be done in backend
        */
-      
+
       //mark all the steps that are done
       exec.steps.forEach((s) => {
         if (s.type != "ST") return;

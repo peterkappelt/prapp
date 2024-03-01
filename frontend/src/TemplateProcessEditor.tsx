@@ -7,7 +7,7 @@ import { useImmer } from "use-immer";
 import { useLocation } from "wouter";
 import { useApi } from "./Api";
 import { StartExecutionButton } from "./components/Process/ActionButtons";
-import { Process, Process_Empty, TProcess } from "./newtypes";
+import { Process, Process_Empty, TProcess } from "./types";
 
 function TemplateProcessEditor({ templateId }: { templateId: string }) {
   const [, setLocation] = useLocation();

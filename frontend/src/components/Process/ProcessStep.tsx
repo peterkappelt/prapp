@@ -1,4 +1,4 @@
-import { TStep, TStepExecution } from "@/newtypes";
+import { TStep, TStepExecution } from "@/types";
 import {
   ActionIcon,
   Card,

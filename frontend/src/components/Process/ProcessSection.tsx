@@ -5,7 +5,7 @@ import {
   TSectionExecution,
   TStep,
   TStepExecution,
-} from "@/newtypes";
+} from "@/types";
 import {
   ActionIcon,
   Button,

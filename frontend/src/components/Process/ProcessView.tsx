@@ -1,4 +1,4 @@
-import { Section_Empty, TProcess, TProcessExecution } from "@/newtypes";
+import { Section_Empty, TProcess, TProcessExecution } from "@/types";
 import { TextInput, Timeline, TimelineProps, Title } from "@mantine/core";
 import React, { useCallback, useMemo } from "react";
 import { ProcessSection } from "./ProcessSection";
