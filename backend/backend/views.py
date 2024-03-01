@@ -19,10 +19,10 @@ class ProcessViewSet(viewsets.GenericViewSet):
     queryset = Process.objects.all()
     permission_classes = [permissions.IsAuthenticated]
 
-    @extend_schema(responses=MetaSerializer)
     def list(self, request):
         queryset = Meta.objects.all()
-        serializer = MetaSerializer(queryset, many=True)
+        processes = map(lambda x: x.latest_revision, queryset)
+        serializer = ProcessSerializer(processes, many=True)
         return Response(serializer.data)
 
     @extend_schema(

@@ -79,7 +79,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Meta'
+                  $ref: '#/components/schemas/Process'
           description: ''
     post:
       operationId: processes_create
