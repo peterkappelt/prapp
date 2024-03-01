@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useApi } from "./Api";
 import { ProcessView } from "./components/Process/ProcessView";
 import { ProcessExecution, TProcessExecution } from "./newtypes";
-import { } from "./types";
 
 export function ProcessExecutionView({ executionId }: { executionId: string }) {
   const api = useApi();
