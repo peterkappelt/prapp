@@ -1,4 +1,4 @@
-name: Validate backend and build containers
+name: Validate backend
 on:
   push:
     paths:

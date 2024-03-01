@@ -1,0 +1,56 @@
+name: Build container
+on:
+  push:
+    paths:
+      - frontend/**
+      - backend/**
+      - .github/workflows/container.yaml
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+jobs:
+  frontend-lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: yarn install --dev
+      - name: Run linter
+        working-directory: ./frontend
+        run: yarn lint
+  frontend-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: yarn install --dev
+      - name: Generate .env
+        working-directory: ./frontend
+        run: echo "VITE_BACKEND_URL=/" > .env
+      - name: Generate API code
+        working-directory: ./frontend
+        run: yarn apigen
+      - name: Build site
+        working-directory: ./frontend
+        run: yarn build
+      - name: Upload build frontend as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend
+          path: ./frontend/dist
