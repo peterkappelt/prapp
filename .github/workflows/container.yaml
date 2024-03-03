@@ -78,6 +78,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend
       - name: Build and push container
+        id: docker_build
         uses: docker/build-push-action@v5
         with:
           context: backend
@@ -85,3 +86,25 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+    outputs:
+      imageid: ${{ steps.docker_build.outputs.imageid }}
+  backend-static:
+    runs-on: ubuntu-latest
+    needs: backend-container
+    steps:
+      - name: Generate Django settings
+        run: echo -e "from prapp.settings_base import *\\nSECRET_KEY='ci'\\nSTATIC_ROOT='./staticroot'" > ./settings.py
+      - run: mkdir static && chmod 777 static
+      - name: Collect static django files
+        run: |
+          docker run \
+            -v $(readlink -f settings.py):/app/prapp/settings.py \
+            -v ./static:/app/staticroot \
+            ghcr.io/peterkappelt/prapp-backend@${{ needs.backend-container.outputs.imageid }} \
+            ./.venv/bin/python -m manage collectstatic --no-input
+      - name: Upload static files as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-static
+          path: ./static
+        
