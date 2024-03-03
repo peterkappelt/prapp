@@ -42,7 +42,7 @@ jobs:
         run: yarn install --dev
       - name: Generate .env
         working-directory: ./frontend
-        run: echo "VITE_BACKEND_URL=/" > .env
+        run: echo "VITE_BACKEND_URL=" > .env
       - name: Generate API code
         working-directory: ./frontend
         run: yarn apigen
