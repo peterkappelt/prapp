@@ -41,9 +41,22 @@ export function ProcessExecutionView({ executionId }: { executionId: string }) {
         }
       }
 
+      if (exec.revision == execution?.revision) {
+        /**
+         * The IDs of each step are randomly generated
+         * by the frontend when running ProcessExecution.parse().
+         * Assuming the revision id is unchanged, the step content
+         * is unchanged and we can keep their id during subsequent
+         * updates
+         */
+        exec.steps.forEach((s, idx) => {
+          s.id = execution.steps[idx].id;
+        });
+      }
+
       setExecution(exec);
     },
-    [setExecution]
+    [execution, setExecution]
   );
 
   useEffect(() => {
