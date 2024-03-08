@@ -131,6 +131,7 @@ function ProcessStepExecution({
                   completedIcon={<IconSettings />}
                 />
                 <Stepper.Step
+                  iconPosition="right"
                   label="Done"
                   description={step.doneAt && step.doneAt.toLocaleString()}
                   mih={0}
