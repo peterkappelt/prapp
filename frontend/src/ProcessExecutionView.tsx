@@ -8,40 +8,40 @@ export function ProcessExecutionView({ executionId }: { executionId: string }) {
   const api = useApi();
   const [execution, setExecution] = useState<TProcessExecution>();
 
-  const updateExecution = useCallback(
-    (exec: TProcessExecution) => {
-      /**
-       * TODO I feel like this should maybe be done in backend
-       */
+  const updateExecution = useCallback((exec: TProcessExecution) => {
+    /**
+     * TODO I feel like this should maybe be done in backend
+     */
 
-      //mark all the steps that are done
-      exec.steps.forEach((s) => {
-        if (s.type != "ST") return;
-        if (s.startedAt && s.doneAt) s.state = "done";
-      });
+    //mark all the steps that are done
+    exec.steps.forEach((s) => {
+      if (s.type != "ST") return;
+      if (s.startedAt && s.doneAt) s.state = "done";
+    });
 
-      // find the first step that is not done and mark it as active
-      const activeStep = exec.steps.find(
-        (s) => s.type == "ST" && s.state != "done"
-      );
-      if (activeStep) activeStep.state = "active";
+    // find the first step that is not done and mark it as active
+    const activeStep = exec.steps.find(
+      (s) => s.type == "ST" && s.state != "done"
+    );
+    if (activeStep) activeStep.state = "active";
 
-      let isDone = true,
+    let isDone = true,
+      hasActive = false;
+    for (let i = exec.steps.length - 1; i >= 0; i--) {
+      const step = exec.steps[i];
+      if (step.type == "SE") {
+        if (isDone) step.state = "done";
+        if (hasActive) step.state = "active";
+        isDone = true;
         hasActive = false;
-      for (let i = exec.steps.length - 1; i >= 0; i--) {
-        const step = exec.steps[i];
-        if (step.type == "SE") {
-          if (isDone) step.state = "done";
-          if (hasActive) step.state = "active";
-          isDone = true;
-          hasActive = false;
-        } else {
-          if (step.state != "done") isDone = false;
-          if (step.state == "active") hasActive = true;
-        }
+      } else {
+        if (step.state != "done") isDone = false;
+        if (step.state == "active") hasActive = true;
       }
+    }
 
-      if (exec.revision == execution?.revision) {
+    setExecution((old_execution) => {
+      if (exec.revision == old_execution?.revision) {
         /**
          * The IDs of each step are randomly generated
          * by the frontend when running ProcessExecution.parse().
@@ -50,14 +50,12 @@ export function ProcessExecutionView({ executionId }: { executionId: string }) {
          * updates
          */
         exec.steps.forEach((s, idx) => {
-          s.id = execution.steps[idx].id;
+          s.id = old_execution.steps[idx].id;
         });
       }
-
-      setExecution(exec);
-    },
-    [execution]
-  );
+      return exec;
+    });
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -74,7 +72,7 @@ export function ProcessExecutionView({ executionId }: { executionId: string }) {
     return () => {
       active = false;
     };
-  }, [executionId, api.executions]);
+  }, [executionId, api.executions, updateExecution]);
 
   const onStepDone = useCallback(
     async (step: string) => {
