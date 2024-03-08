@@ -56,7 +56,7 @@ export function ProcessExecutionView({ executionId }: { executionId: string }) {
 
       setExecution(exec);
     },
-    [execution, setExecution]
+    [execution]
   );
 
   useEffect(() => {
@@ -74,7 +74,7 @@ export function ProcessExecutionView({ executionId }: { executionId: string }) {
     return () => {
       active = false;
     };
-  }, [executionId, setExecution, api.executions, updateExecution]);
+  }, [executionId, api.executions]);
 
   const onStepDone = useCallback(
     async (step: string) => {
