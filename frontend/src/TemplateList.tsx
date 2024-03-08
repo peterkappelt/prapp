@@ -175,7 +175,7 @@ export const TemplateList = () => {
       <Group justify="flex-end">
         <Button
           leftSection={<IconPlus size={14} />}
-          onClick={() => setLocation(`/template/${crypto.randomUUID()}`)}
+          onClick={() => setLocation(`/template/new`)}
         >
           New Process
         </Button>
