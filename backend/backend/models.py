@@ -26,10 +26,7 @@ class Process(models.Model):
 
 class Step(models.Model):
     class Type(models.TextChoices):
-        Section = (
-            "SE",
-            "Section",
-        )
+        Section = "SE", "Section"
         Step = "ST", "Step"
 
     title = models.CharField(max_length=200)
