@@ -433,6 +433,10 @@ components:
           readOnly: true
         initiatedBy:
           type: integer
+        state:
+          allOf:
+          - $ref: '#/components/schemas/StateEnum'
+          readOnly: true
         process:
           $ref: '#/components/schemas/ProcessExecution'
       required:
@@ -440,6 +444,7 @@ components:
       - initiatedAt
       - initiatedBy
       - process
+      - state
     ExecutionMarkStepRequest:
       type: object
       properties:
@@ -463,10 +468,15 @@ components:
           readOnly: true
         initiatedBy:
           type: integer
+        state:
+          allOf:
+          - $ref: '#/components/schemas/StateEnum'
+          readOnly: true
       required:
       - id
       - initiatedAt
       - initiatedBy
+      - state
     MarkAsEnum:
       enum:
       - StepStarted
@@ -563,6 +573,11 @@ components:
       required:
       - steps
       - title
+    StateEnum:
+      enum:
+      - done
+      - started
+      type: string
     Step:
       type: object
       properties:

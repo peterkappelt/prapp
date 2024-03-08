@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from rest_framework import serializers
 from .models import Execution, Meta, Process, Step
 from datetime import datetime
@@ -65,27 +65,18 @@ class StepExecutionSerializer(serializers.ModelSerializer):
             "doneBy",
         )
 
-    def get_startedAt(self, obj) -> Optional[datetime]:
-        self.started = (
-            self.context["history"].filter(step=obj.id, type="StepStarted").first()
-            if "history" in self.context
-            else None
-        )
-        return self.started.at if self.started else None
+    def get_startedAt(self, obj: Step) -> Optional[datetime]:
+        self.info = obj.execution_info(self.context["execution"])
+        return self.info.startedAt
 
     def get_startedBy(self, obj) -> Optional[int]:
-        return self.started.by.pk if self.started else None
+        return self.info.startedBy.pk if self.info.startedBy else None
 
     def get_doneAt(self, obj) -> Optional[datetime]:
-        self.done = (
-            self.context["history"].filter(step=obj.id, type="StepDone").first()
-            if "history" in self.context
-            else None
-        )
-        return self.done.at if self.done else None
+        return self.info.doneAt
 
     def get_doneBy(self, obj) -> Optional[int]:
-        return self.done.by.pk if self.done else None
+        return self.info.doneBy.pk if self.info.doneBy else None
 
 
 class ProcessExecutionSerializer(ProcessSerializer):
@@ -94,21 +85,30 @@ class ProcessExecutionSerializer(ProcessSerializer):
 
 class ExecutionSerializer(serializers.ModelSerializer):
     process = ProcessExecutionSerializer()
+    state = serializers.SerializerMethodField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance:
-            self.context["history"] = self.instance.history
+            self.context["execution"] = self.instance
 
     class Meta:
         model = Execution
-        fields = ("id", "initiatedAt", "initiatedBy", "process")
+        fields = ("id", "initiatedAt", "initiatedBy", "state", "process")
+
+    def get_state(self, obj: Execution) -> Literal["done", "started"]:
+        return obj.state
 
 
 class ExecutionShallowSerializer(serializers.ModelSerializer):
+    state = serializers.SerializerMethodField()
+
     class Meta:
         model = Execution
-        fields = ("id", "initiatedAt", "initiatedBy")
+        fields = ("id", "initiatedAt", "initiatedBy", "state")
+
+    def get_state(self, obj: Execution) -> Literal["done", "started"]:
+        return obj.state
 
 
 class ExecutionMarkStepSerializer(serializers.Serializer):
