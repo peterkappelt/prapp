@@ -10,14 +10,17 @@ import {
   Skeleton,
   Stack,
   Text,
+  ThemeIcon,
   Title,
 } from "@mantine/core";
 import {
   IconChevronDown,
   IconChevronUp,
+  IconCircleCheck,
   IconEye,
   IconInfoCircle,
   IconPlus,
+  IconSettings,
 } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { useImmer } from "use-immer";
@@ -63,18 +66,40 @@ export const ProcessExecutions = ({ id }: { id: string }) => {
       {executions && executions.length
         ? executions.map((exec) => (
             <Card.Section inheritPadding withBorder py="sm" key={exec.id}>
-              <Group justify="space-between">
-                Initiated:&nbsp;{exec.initiatedAt.toLocaleString()}
-                <ActionIcon
-                  variant="light"
-                  onClick={() => setLocation(`/execution/${exec.id}`)}
-                >
-                  <IconEye
-                    style={{ width: "70%", height: "70%" }}
-                    stroke={1.5}
-                  />
-                </ActionIcon>
-              </Group>
+              <Grid align="center">
+                <Grid.Col span="content">
+                  {exec.state == "done" && (
+                    <ThemeIcon variant="white" size="xl" color="green">
+                      <IconCircleCheck
+                        stroke={1.5}
+                        style={{ width: "70%", height: "70%" }}
+                      />
+                    </ThemeIcon>
+                  )}
+                  {exec.state == "started" && (
+                    <ThemeIcon variant="white" size="xl">
+                      <IconSettings
+                        stroke={1.5}
+                        style={{ width: "70%", height: "70%" }}
+                      />
+                    </ThemeIcon>
+                  )}
+                </Grid.Col>
+                <Grid.Col span="auto">
+                  Initiated:&nbsp;{exec.initiatedAt.toLocaleString()}
+                </Grid.Col>
+                <Grid.Col span="content">
+                  <ActionIcon
+                    variant="light"
+                    onClick={() => setLocation(`/execution/${exec.id}`)}
+                  >
+                    <IconEye
+                      style={{ width: "70%", height: "70%" }}
+                      stroke={1.5}
+                    />
+                  </ActionIcon>
+                </Grid.Col>
+              </Grid>
             </Card.Section>
           ))
         : undefined}
