@@ -6,17 +6,21 @@ import {
   CardSectionProps,
   Grid,
   Group,
+  Menu,
   Stepper,
   TextInput,
   Title,
   Tooltip,
+  rem,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { RichTextEditor } from "@mantine/tiptap";
 import {
+  IconCheckbox,
   IconCircleCheck,
   IconPlayerPlay,
   IconSettings,
+  IconSquare,
   IconTrash,
 } from "@tabler/icons-react";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -172,20 +176,64 @@ function ProcessStepEditable({
   return (
     <ProcessStep
       title={
-        <TextInput
-          size="lg"
-          variant="unstyled"
-          placeholder="Step Title"
-          value={props.step.title}
-          onChange={(e) => handleTitleChange(e.currentTarget.value)}
-          rightSection={
+        <Grid align="center" gutter="sm">
+          <Grid.Col span="auto">
+            <TextInput
+              size="lg"
+              variant="unstyled"
+              placeholder="Step Title"
+              value={props.step.title}
+              onChange={(e) => handleTitleChange(e.currentTarget.value)}
+            />
+          </Grid.Col>
+          <Grid.Col span="content">
             <ActionIcon variant="default" onClick={onDelete}>
               <IconTrash style={{ width: "70%", height: "70%" }} stroke={1.5} />
             </ActionIcon>
-          }
-        />
+          </Grid.Col>
+          <Grid.Col span="content">
+            <Menu
+              trigger="click-hover"
+              openDelay={100}
+              closeDelay={200}
+              withArrow
+              arrowPosition="center"
+              position="bottom-end"
+            >
+              <Menu.Target>
+                <ActionIcon variant="default">
+                  <IconSettings
+                    style={{ width: "70%", height: "70%" }}
+                    stroke={1.5}
+                  />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Label>Step Settings</Menu.Label>
+                <Menu.Item
+                  onClick={() =>
+                    mutator((draft) => {
+                      draft.startWithPrevious = !draft.startWithPrevious;
+                    })
+                  }
+                  leftSection={
+                    props.step.startWithPrevious ? (
+                      <IconCheckbox
+                        style={{ width: rem(14), height: rem(14) }}
+                      />
+                    ) : (
+                      <IconSquare style={{ width: rem(14), height: rem(14) }} />
+                    )
+                  }
+                >
+                  Autostart after Previous
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Grid.Col>
+        </Grid>
       }
-      titleProps={{ pr: 0 }}
+      titleProps={{ pr: "sm" }}
       descriptionProps={{
         onChange: handleDescChange,
         editable: true,

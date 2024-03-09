@@ -23,6 +23,7 @@ const Step = z.object({
   type: z.literal("ST"),
   title: z.string(),
   description: z.string().default(""),
+  startWithPrevious: z.boolean().optional(),
 });
 const Step_Empty = () =>
   Step.parse({
