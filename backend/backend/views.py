@@ -76,6 +76,12 @@ class ProcessViewSet(viewsets.GenericViewSet):
         process = get_object_or_404(Meta.objects.all(), pk=pk).latest_revision
 
         exec = process.executions.create(initiatedBy=request.user)
+
+        steps = exec.process.steps.all()
+        first_step = next((s for s in steps if s.type == "ST"), None)
+        if (first_step is not None) and (first_step.startWithPrevious):
+            exec.history.create(type="StepStarted", step=first_step, by=request.user)
+
         serializer = ExecutionSerializer(exec)
         return Response(serializer.data)
 
@@ -107,9 +113,12 @@ class ExecutionViewSet(viewsets.GenericViewSet):
         req = ExecutionMarkStepSerializer(data=request.data)
         req.is_valid(raise_exception=True)
 
+        step_idx, mark_as = req.data["step_idx"], req.data["mark_as"]
         execution = get_object_or_404(Execution.objects.all(), pk=pk)
+        steps = execution.process.steps.all()
+
         try:
-            step = execution.process.steps.all()[req.data["step_idx"]]
+            step = steps[step_idx]
             if step.type != "ST":
                 raise Exception()
         except:
@@ -117,7 +126,24 @@ class ExecutionViewSet(viewsets.GenericViewSet):
                 {"step_idx": "Must be a valid index of a step with type ST"}
             )
 
-        execution.history.create(type=req.data["mark_as"], step=step, by=request.user)
+        # create the history item where the step gets marked as "started" or "done"
+        execution.history.create(type=mark_as, step=step, by=request.user)
+
+        # get the following step
+        following_steps = steps[(step_idx + 1) :]
+        next_step = next((s for s in following_steps if s.type == "ST"), None)
+
+        # the next step might have "startWithPrevious" set
+        # if that's the case and the current step is marked as done
+        # we shall mark the following step as started
+        if (
+            (mark_as == "StepDone")
+            and (next_step is not None)
+            and (next_step.startWithPrevious)
+        ):
+            execution.history.create(
+                type="StepStarted", step=next_step, by=request.user
+            )
 
         serializer = ExecutionSerializer(execution)
         return Response(serializer.data)

@@ -588,6 +588,8 @@ components:
           $ref: '#/components/schemas/TypeEnum'
         description:
           type: string
+        startWithPrevious:
+          type: boolean
       required:
       - title
       - type
@@ -601,6 +603,8 @@ components:
           $ref: '#/components/schemas/TypeEnum'
         description:
           type: string
+        startWithPrevious:
+          type: boolean
         startedAt:
           type: string
           format: date-time
@@ -637,6 +641,8 @@ components:
           $ref: '#/components/schemas/TypeEnum'
         description:
           type: string
+        startWithPrevious:
+          type: boolean
       required:
       - title
       - type

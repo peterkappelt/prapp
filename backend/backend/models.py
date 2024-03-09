@@ -44,6 +44,11 @@ class Step(models.Model):
     title = models.CharField(max_length=200)
     type = models.CharField(max_length=2, choices=Type.choices)
     description = models.TextField(blank=True)
+    startWithPrevious = models.BooleanField(
+        default=False,
+        blank=True,
+        db_comment="Automatically start this step when the previous one gets marked as done",
+    )
 
     process = models.ForeignKey(Process, on_delete=models.CASCADE, related_name="steps")
 

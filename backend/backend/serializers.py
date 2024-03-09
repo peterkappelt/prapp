@@ -21,7 +21,12 @@ class MetaSerializer(serializers.ModelSerializer):
 class StepSerializer(serializers.ModelSerializer):
     class Meta:
         model = Step
-        fields = ("title", "type", "description")
+        fields = (
+            "title",
+            "type",
+            "description",
+            "startWithPrevious",
+        )
 
 
 class ProcessSerializer(serializers.ModelSerializer):
@@ -59,6 +64,7 @@ class StepExecutionSerializer(serializers.ModelSerializer):
             "title",
             "type",
             "description",
+            "startWithPrevious",
             "startedAt",
             "startedBy",
             "doneAt",
